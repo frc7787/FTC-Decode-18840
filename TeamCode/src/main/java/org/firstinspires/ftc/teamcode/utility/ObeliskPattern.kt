@@ -4,7 +4,14 @@ import org.firstinspires.ftc.teamcode.utility.ArtifactColour.*
 
 enum class ArtifactColour {
     GREEN,
-    PURPLE
+    PURPLE;
+
+    fun opposite(): ArtifactColour {
+        return when (this) {
+            GREEN -> PURPLE
+            PURPLE -> GREEN
+        }
+    }
 }
 
 class ObeliskPattern private constructor(
