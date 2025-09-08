@@ -5,7 +5,6 @@ import com.pedropathing.paths.PathChain
 import dev.frozenmilk.dairy.core.FeatureRegistrar
 import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
-import dev.frozenmilk.dairy.core.util.supplier.numeric.EnhancedDoubleSupplier
 import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.bindings.BoundDoubleSupplier
 import dev.frozenmilk.mercurial.commands.Lambda
@@ -16,7 +15,7 @@ object DriveBase: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Hardware
 
-    private val follower by subsystemCell {
+    val follower by subsystemCell {
         Constants.createFollower(FeatureRegistrar.activeOpMode.hardwareMap)
     }
 
@@ -71,7 +70,7 @@ object DriveBase: Subsystem {
      * Returns a command which follows the supplied path chain. Finishes when
      * [com.pedropathing.follower.Follower.isBusy] returns false.
      */
-    fun followPathChain(path: PathChain, holdEnd: Boolean = false): Lambda {
+    fun followPath(path: PathChain, holdEnd: Boolean = false): Lambda {
         return Lambda("follow-path-chain")
             .setExecute {
                 follower.followPath(path, holdEnd)
