@@ -6,6 +6,7 @@ import dev.frozenmilk.dairy.core.FeatureRegistrar
 import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.util.supplier.numeric.EnhancedDoubleSupplier
+import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.bindings.BoundDoubleSupplier
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.subsystems.Subsystem
@@ -18,6 +19,11 @@ object DriveBase: Subsystem {
     private val follower by subsystemCell {
         Constants.createFollower(FeatureRegistrar.activeOpMode.hardwareMap)
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Hooks
+
+    override fun postUserInitHook(opMode: Wrapper) { follower.update() }
 
     // ---------------------------------------------------------------------------------------------
     // Commands
