@@ -6,6 +6,7 @@ import dev.frozenmilk.dairy.core.FeatureRegistrar
 import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.util.supplier.numeric.EnhancedDoubleSupplier
+import dev.frozenmilk.mercurial.bindings.BoundDoubleSupplier
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.subsystems.Subsystem
 import org.firstinspires.ftc.teamcode.pedropathing.Constants
@@ -22,9 +23,9 @@ object DriveBase: Subsystem {
     // Commands
 
     fun drive(
-        driveSupplier: () -> Double,
-        strafeSupplier: () -> Double,
-        turnSupplier: () -> Double,
+        driveSupplier: BoundDoubleSupplier,
+        strafeSupplier: BoundDoubleSupplier,
+        turnSupplier: BoundDoubleSupplier,
         brake: Boolean = true,
         robotCentric: Boolean = false
     ): Lambda {
@@ -34,9 +35,9 @@ object DriveBase: Subsystem {
             }
             .setExecute {
                 follower.setTeleOpDrive(
-                    driveSupplier.invoke(),
-                    strafeSupplier.invoke(),
-                    turnSupplier.invoke(),
+                    driveSupplier.state,
+                    strafeSupplier.state,
+                    turnSupplier.state,
                     robotCentric
                 )
             }

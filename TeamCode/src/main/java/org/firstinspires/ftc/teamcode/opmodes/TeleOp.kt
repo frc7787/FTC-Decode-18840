@@ -12,9 +12,9 @@ class TeleOp: OpMode() {
 
     override fun init() {
         DriveBase.defaultCommand = DriveBase.drive(
-            { -gamepad1.left_stick_y.toDouble() },
-            { gamepad1.left_stick_x.toDouble()  },
-            { gamepad1.right_stick_x.toDouble() }
+            Mercurial.gamepad1.leftStickY,
+            Mercurial.gamepad1.leftStickX,
+            Mercurial.gamepad1.rightStickX
         )
     }
 
