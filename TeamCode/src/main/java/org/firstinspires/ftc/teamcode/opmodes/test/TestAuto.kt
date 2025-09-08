@@ -17,8 +17,6 @@ class TestAuto: OpMode() {
     private val testPoseTwo = Pose(20.0, 18.0)
     private val endPose     = Pose(-2.0, -5.0)
 
-    override fun init() {}
-
     override fun start() {
         val testPathOne = DriveBase.follower.pathBuilder()
             .addPath(BezierLine(startPose, testPoseOne))
@@ -41,6 +39,8 @@ class TestAuto: OpMode() {
             DriveBase.followPath(testPathThree, false)
         ).schedule()
     }
+
+    override fun init() {}
 
     override fun loop() {}
 }
