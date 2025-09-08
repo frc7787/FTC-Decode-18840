@@ -28,6 +28,9 @@ object DriveBase: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Commands
 
+    /**
+     * Returns a command which runs the drive base. Does not end unless interrupted.
+     */
     fun drive(
         driveSupplier: BoundDoubleSupplier,
         strafeSupplier: BoundDoubleSupplier,
@@ -50,20 +53,32 @@ object DriveBase: Subsystem {
             .setFinish { false }
     }
 
+    /**
+     * Returns a command which follows the supplied path. Finishes when
+     * [com.pedropathing.follower.Follower.isBusy] returns false.
+     */
     fun followPath(path: Path, holdEnd: Boolean = false): Lambda {
         return Lambda("follow-path")
             .setExecute {
                 follower.followPath(path, holdEnd)
             }
-            .setFinish { !follower.isBusy }
+            .setFinish {
+                !follower.isBusy
+            }
     }
 
+    /**
+     * Returns a command which follows the supplied path chain. Finishes when
+     * [com.pedropathing.follower.Follower.isBusy] returns false.
+     */
     fun followPathChain(path: PathChain, holdEnd: Boolean = false): Lambda {
         return Lambda("follow-path-chain")
             .setExecute {
                 follower.followPath(path, holdEnd)
             }
-            .setFinish { !follower.isBusy }
+            .setFinish {
+                !follower.isBusy
+            }
     }
 
     // ---------------------------------------------------------------------------------------------
