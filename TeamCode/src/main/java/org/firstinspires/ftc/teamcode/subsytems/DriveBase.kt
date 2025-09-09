@@ -20,6 +20,16 @@ object DriveBase: Subsystem {
     }
 
     // ---------------------------------------------------------------------------------------------
+    // Configuration
+
+    var configuration = Configuration()
+
+    data class Configuration(val debug: Boolean = false)
+
+    // ---------------------------------------------------------------------------------------------
+    // State
+
+    // ---------------------------------------------------------------------------------------------
     // Hooks
 
     override fun postUserInitHook(opMode: Wrapper) { follower.update() }
