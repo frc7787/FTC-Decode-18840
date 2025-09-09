@@ -4,9 +4,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import dev.frozenmilk.mercurial.Mercurial
 import org.firstinspires.ftc.teamcode.subsytems.DriveBase
+import org.firstinspires.ftc.teamcode.subsytems.Intake
+import org.firstinspires.ftc.teamcode.subsytems.TurnTable
 
 @TeleOp(group = "$")
 @DriveBase.Attach
+@Intake.Attach
+@TurnTable.Attach
 @Mercurial.Attach
 class TeleOp: OpMode() {
 
