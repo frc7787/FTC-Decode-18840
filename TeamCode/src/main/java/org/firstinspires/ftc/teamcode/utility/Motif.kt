@@ -14,7 +14,7 @@ enum class ArtifactColour {
     }
 }
 
-private interface Motif {
+private sealed interface Motif {
     fun first(): ArtifactColour
     fun second(): ArtifactColour
     fun third(): ArtifactColour
