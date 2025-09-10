@@ -62,20 +62,20 @@ object Turret: Subsystem {
                 val properties = PropertiesHandler(name)
 
                 return Configuration(
-                    debug = properties.readBoolean("debug"),
-                    maxClockwisePower = properties.readDouble("maxClockwisePower"),
-                    maxCounterClockwisePower = properties.readDouble("maxCounterClockwisePower"),
-                    homingPower = properties.readDouble("homingPower"),
-                    homingDirection = properties.readEnum("homingDirection"),
-                    minDegrees = properties.readDouble("minDegrees"),
-                    maxDegrees = properties.readDouble("maxDegrees"),
-                    toleranceDegrees = properties.readDouble("toleranceDegrees"),
-                    ticksPerDegree = properties.readDouble("ticksPerDegree"),
-                    pidfCoefficients = PIDFCoefficients(
-                        p = properties.readDouble("p"),
-                        i = properties.readDouble("i"),
-                        d = properties.readDouble("d"),
-                        f = properties.readDouble("f")
+                    properties.readBoolean("debug"),
+                    properties.readDouble("maxClockwisePower"),
+                    properties.readDouble("maxCounterClockwisePower"),
+                    properties.readDouble("homingPower"),
+                    properties.readEnum("homingDirection"),
+                    properties.readDouble("minDegrees"),
+                    properties.readDouble("maxDegrees"),
+                    properties.readDouble("toleranceDegrees"),
+                    properties.readDouble("ticksPerDegree"),
+                    PIDFCoefficients(
+                        properties.readDouble("p"),
+                        properties.readDouble("i"),
+                        properties.readDouble("d"),
+                        properties.readDouble("f")
                     )
                 )
             }
