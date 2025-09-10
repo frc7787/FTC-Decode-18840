@@ -9,7 +9,10 @@ import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.bindings.BoundDoubleSupplier
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.subsystems.Subsystem
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.firstinspires.ftc.teamcode.pedropathing.Constants
+import java.io.File
 
 object DriveBase: Subsystem {
     // ---------------------------------------------------------------------------------------------
@@ -22,9 +25,29 @@ object DriveBase: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Configuration
 
-    var configuration = Configuration()
+    @Serializable
+    data class Configuration(
+        val debug: Boolean = false,
+        val maxTurnPower: Double = 0.9,
+        val maxStrafePower: Double = 0.9,
+        val maxDrivePower: Double = 0.9,
+        val fieldCentric: Boolean = true,
+        val brake: Boolean = false
+    ) {
+        companion object {
+            fun fromJson(): Configuration {
+                try {
+                    val rawText = File("drivebase-config.json").readText()
+                    return Json.decodeFromString(rawText)
+                } catch (_: Exception) {
+                    return Configuration()
+                }
+            }
+        }
 
-    data class Configuration(val debug: Boolean = false)
+    }
+
+    var configuration = Configuration.fromJson()
 
     // ---------------------------------------------------------------------------------------------
     // State

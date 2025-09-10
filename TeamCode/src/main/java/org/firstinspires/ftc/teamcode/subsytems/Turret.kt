@@ -9,10 +9,12 @@ import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.commands.groups.Sequential
 import dev.frozenmilk.mercurial.subsystems.Subsystem
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.firstinspires.ftc.teamcode.control.PIDFCoefficients
 import org.firstinspires.ftc.teamcode.control.PIDFController
-import org.firstinspires.ftc.teamcode.utility.PropertiesHandler
 import org.firstinspires.ftc.teamcode.utility.RotationDirection
+import java.io.File
 import kotlin.math.abs
 
 object Turret: Subsystem {
@@ -37,6 +39,7 @@ object Turret: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Config
 
+    @Serializable
     data class Configuration(
         val debug: Boolean = false,
         val maxClockwisePower: Double = 1.0,
@@ -57,32 +60,18 @@ object Turret: Subsystem {
         )
 
         companion object {
-
-            fun fromFile(name: String = "turret.properties"): Configuration {
-                val properties = PropertiesHandler(name)
-
-                return Configuration(
-                    properties.readBoolean("debug"),
-                    properties.readDouble("maxClockwisePower"),
-                    properties.readDouble("maxCounterClockwisePower"),
-                    properties.readDouble("homingPower"),
-                    properties.readEnum("homingDirection"),
-                    properties.readDouble("minDegrees"),
-                    properties.readDouble("maxDegrees"),
-                    properties.readDouble("toleranceDegrees"),
-                    properties.readDouble("ticksPerDegree"),
-                    PIDFCoefficients(
-                        properties.readDouble("p"),
-                        properties.readDouble("i"),
-                        properties.readDouble("d"),
-                        properties.readDouble("f")
-                    )
-                )
+            fun fromJson(): Configuration {
+                try {
+                    val rawText = File("turret-config.json").readText()
+                    return Json.decodeFromString(rawText)
+                } catch (_: Exception) {
+                    return Configuration()
+                }
             }
         }
     }
 
-    var configuration = Configuration.fromFile("turret.properties")
+    var configuration = Configuration.fromJson()
 
     // ---------------------------------------------------------------------------------------------
     // State
@@ -152,7 +141,7 @@ object Turret: Subsystem {
 
     /**
      * Runs the turret calibration sequence, used to determine [Configuration.ticksPerDegree]
-     * empirically. Once the calibration sequence is finished writes the value to turret.properties.
+     * empirically. Once the calibration sequence is finished writes the value to turret-config.json.
      *
      * @param calibrationPower The power to run the calibration sequence in. Probably shouldn't be
      *                         higher than 0.5
@@ -172,8 +161,11 @@ object Turret: Subsystem {
                 .addFinish { leftLimitSwitch.state }
                 .addEnd {
                     val ticksPerDegree = turretMotor.currentPosition / configuration.maxDegrees
-                    val properties = PropertiesHandler("turret.properties")
-                    if (writeResult) properties.writeDouble("ticksPerDegrees", ticksPerDegree)
+                    if (writeResult) {
+                        val newConfig = Configuration(ticksPerDegree = ticksPerDegree)
+                        val configString = Json.encodeToString(newConfig)
+                        File("turret-config.json").writeText(configString)
+                    }
                 }
         )
     }

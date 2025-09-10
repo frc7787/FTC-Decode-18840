@@ -4,6 +4,8 @@ import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.subsystems.Subsystem
+import kotlinx.serialization.json.Json
+import java.io.File
 
 object Shooter: Subsystem {
     // ---------------------------------------------------------------------------------------------
@@ -12,9 +14,21 @@ object Shooter: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Config
 
-    var configuration = Configuration()
 
-    data class Configuration(val debug: Boolean = false)
+    data class Configuration(val debug: Boolean = false) {
+        companion object {
+            fun fromJson(): Configuration {
+                try {
+                    val rawText = File("shooter-config.json").readText()
+                    return Json.decodeFromString(rawText)
+                } catch (_: Exception) {
+                    return Configuration()
+                }
+            }
+        }
+    }
+
+    var configuration = Configuration.fromJson()
 
     // ---------------------------------------------------------------------------------------------
     // State

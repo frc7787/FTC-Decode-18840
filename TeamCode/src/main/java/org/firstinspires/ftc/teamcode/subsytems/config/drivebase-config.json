@@ -1,0 +1,8 @@
+{
+  "debug": false,
+  "maxDrivePower": 0.9,
+  "maxStrafePower": 0.9,
+  "maxTurnPower": 0.9,
+  "fieldCentric": true,
+  "brake": true
+}

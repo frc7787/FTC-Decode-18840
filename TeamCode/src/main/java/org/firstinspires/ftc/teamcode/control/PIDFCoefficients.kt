@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.control
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class PIDFCoefficients(
     val p: Double,
     val i: Double,

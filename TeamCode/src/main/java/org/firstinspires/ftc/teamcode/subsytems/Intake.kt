@@ -4,6 +4,8 @@ import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.subsystems.Subsystem
+import kotlinx.serialization.json.Json
+import java.io.File
 
 object Intake: Subsystem {
     // ---------------------------------------------------------------------------------------------
@@ -12,9 +14,20 @@ object Intake: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Config
 
-    var configuration = Configuration()
+    data class Configuration(val debug: Boolean = true) {
+        companion object {
+            fun fromJson(): Configuration {
+                try {
+                    val rawText = File("intake-configuration.json").readText()
+                    return Json.decodeFromString(rawText)
+                } catch (_: Exception) {
+                    return Configuration()
+                }
+            }
+        }
+    }
 
-    data class Configuration(val debug: Boolean = true)
+    var configuration = Configuration.fromJson()
 
     // ---------------------------------------------------------------------------------------------
     // State
