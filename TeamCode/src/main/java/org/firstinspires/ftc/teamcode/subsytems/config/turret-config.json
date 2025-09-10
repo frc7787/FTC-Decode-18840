@@ -12,5 +12,7 @@
     "i": 0.0,
     "d": 0.02,
     "f": 0.2
-  }
+  },
+  "motorDirection": "forward",
+  "brake": true
 }

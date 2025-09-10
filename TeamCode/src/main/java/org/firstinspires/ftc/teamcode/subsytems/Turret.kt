@@ -2,10 +2,12 @@ package org.firstinspires.ftc.teamcode.subsytems
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DigitalChannel
 import dev.frozenmilk.dairy.core.FeatureRegistrar
 import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
+import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.commands.groups.Sequential
 import dev.frozenmilk.mercurial.subsystems.Subsystem
@@ -51,6 +53,8 @@ object Turret: Subsystem {
         val toleranceDegrees: Double = 0.5,
         val ticksPerDegree: Double = 20.0,
         val pidfCoefficients: PIDFCoefficients = PIDFCoefficients(0.5, 0.0, 0.1, 0.2),
+        val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+        val brake: Boolean = true
     ) {
         val controller = PIDFController(
             pidfCoefficients,
@@ -84,6 +88,11 @@ object Turret: Subsystem {
 
     // ---------------------------------------------------------------------------------------------
     // Hooks
+
+    override fun preUserInitHook(opMode: Wrapper) {
+        turretMotor.direction = configuration.motorDirection
+        if (configuration.brake) turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Commands

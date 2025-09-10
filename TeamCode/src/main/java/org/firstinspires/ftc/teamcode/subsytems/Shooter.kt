@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.subsytems
 
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
+import dev.frozenmilk.dairy.core.FeatureRegistrar
 import dev.frozenmilk.dairy.core.dependency.Dependency
 import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.wrapper.Wrapper
@@ -11,11 +15,18 @@ object Shooter: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Hardware
 
+    private val shooterMotor by subsystemCell {
+        FeatureRegistrar.activeOpMode.hardwareMap["shooterMotor"] as DcMotorEx
+    }
+
     // ---------------------------------------------------------------------------------------------
     // Config
 
-
-    data class Configuration(val debug: Boolean = false) {
+    data class Configuration(
+        val debug: Boolean = false,
+        val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+        val brake: Boolean = true
+    ) {
         companion object {
             fun fromJson(): Configuration {
                 try {
@@ -36,7 +47,10 @@ object Shooter: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Hooks
 
-    override fun postUserInitHook(opMode: Wrapper) {}
+    override fun preUserInitHook(opMode: Wrapper) {
+        shooterMotor.direction = configuration.motorDirection
+        if (configuration.brake) shooterMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+    }
 
     override fun preUserLoopHook(opMode: Wrapper) {}
 
