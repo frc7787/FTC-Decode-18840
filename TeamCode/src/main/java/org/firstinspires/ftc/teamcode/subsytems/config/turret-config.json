@@ -3,7 +3,7 @@
   "maxClockwisePower": 1.0,
   "maxCounterClockwisePower": -1.0,
   "homingPower": 0.6,
-  "homingDirection": "counterclockwise",
+  "homingDirection": "COUNTERCLOCKWISE",
   "minDegrees": 0.0,
   "maxDegrees": 270.0,
   "toleranceDegrees": 0.5,
@@ -13,6 +13,6 @@
     "d": 0.02,
     "f": 0.2
   },
-  "motorDirection": "forward",
+  "motorDirection": "FORWARD",
   "brake": true
 }

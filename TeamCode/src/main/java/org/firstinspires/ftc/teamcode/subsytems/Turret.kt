@@ -84,7 +84,6 @@ object Turret: Subsystem {
         get() {
             return turretMotor.currentPosition.toDouble() / configuration.ticksPerDegree
         }
-        private set
 
     // ---------------------------------------------------------------------------------------------
     // Hooks
