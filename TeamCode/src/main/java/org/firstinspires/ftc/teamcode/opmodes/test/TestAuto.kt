@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import dev.frozenmilk.mercurial.Mercurial
 import dev.frozenmilk.mercurial.commands.groups.Sequential
-import org.firstinspires.ftc.teamcode.subsytems.DriveBase
 
 @Autonomous(group = "Test")
 @Mercurial.Attach

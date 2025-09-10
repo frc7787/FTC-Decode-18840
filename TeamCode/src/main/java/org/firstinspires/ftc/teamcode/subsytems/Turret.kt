@@ -24,18 +24,15 @@ object Turret: Subsystem {
     // Hardware
 
     private val turretMotor by subsystemCell {
-        val hardwareMap = FeatureRegistrar.activeOpMode.hardwareMap
-        hardwareMap["turretMotor"] as DcMotorEx
+        FeatureRegistrar.activeOpMode.hardwareMap["turretMotor"] as DcMotorEx
     }
 
     private val rightLimitSwitch by subsystemCell {
-        val hardwareMap = FeatureRegistrar.activeOpMode.hardwareMap
-        hardwareMap["rightLimitSwitch"] as DigitalChannel
+        FeatureRegistrar.activeOpMode.hardwareMap["rightLimitSwitch"] as DigitalChannel
     }
 
     private val leftLimitSwitch by subsystemCell {
-        val hardwareMap = FeatureRegistrar.activeOpMode.hardwareMap
-        hardwareMap["leftLimitSwitch"] as DigitalChannel
+        FeatureRegistrar.activeOpMode.hardwareMap["leftLimitSwitch"] as DigitalChannel
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -51,17 +48,23 @@ object Turret: Subsystem {
         val minDegrees: Double = 0.0,
         val maxDegrees: Double = 270.0,
         val toleranceDegrees: Double = 0.5,
-        val ticksPerDegree: Double = 20.0,
+        val motorPPR: Double = 112.0,
+        val gearRatio: Double = 4.0,
         val pidfCoefficients: PIDFCoefficients = PIDFCoefficients(0.5, 0.0, 0.1, 0.2),
         val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
         val brake: Boolean = true
     ) {
+
         val controller = PIDFController(
             pidfCoefficients,
             toleranceDegrees,
             maxClockwisePower,
             maxCounterClockwisePower
         )
+
+        // We multiply by 4 because we care about CPR not PPR. (We use PPR in the configuration
+        // because that is what most manufacturers list on their websites).
+        val ticksPerDegree = motorPPR * 4 * gearRatio
 
         companion object {
             fun fromJson(): Configuration {
@@ -145,37 +148,6 @@ object Turret: Subsystem {
                 turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
             }
             .setInterruptible(false)
-    }
-
-    /**
-     * Runs the turret calibration sequence, used to determine [Configuration.ticksPerDegree]
-     * empirically. Once the calibration sequence is finished writes the value to turret-config.json.
-     *
-     * @param calibrationPower The power to run the calibration sequence in. Probably shouldn't be
-     *                         higher than 0.5
-     * @param writeResult Whether to write the result of the calibration to the properties file
-     */
-    fun calibrate(calibrationPower: Double, writeResult: Boolean = true): Sequential {
-        val clippedCalibrationPower = calibrationPower.coerceIn(
-            configuration.maxClockwisePower,
-            configuration.maxCounterClockwisePower
-        )
-
-        return Sequential(
-            manual(clippedCalibrationPower)
-                .addFinish { rightLimitSwitch.state }
-                .addEnd { reset() },
-            manual(-clippedCalibrationPower)
-                .addFinish { leftLimitSwitch.state }
-                .addEnd {
-                    val ticksPerDegree = turretMotor.currentPosition / configuration.maxDegrees
-                    if (writeResult) {
-                        val newConfig = Configuration(ticksPerDegree = ticksPerDegree)
-                        val configString = Json.encodeToString(newConfig)
-                        File("turret-config.json").writeText(configString)
-                    }
-                }
-        )
     }
 
     fun home(): Sequential {
