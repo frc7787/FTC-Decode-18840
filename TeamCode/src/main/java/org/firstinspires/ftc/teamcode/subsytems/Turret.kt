@@ -11,7 +11,6 @@ import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.commands.groups.Sequential
 import dev.frozenmilk.mercurial.subsystems.Subsystem
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.firstinspires.ftc.teamcode.control.PIDFCoefficients
@@ -39,40 +38,6 @@ object Turret: Subsystem {
 
     // ---------------------------------------------------------------------------------------------
     // Config
-
-    @Serializable
-    data class Configuration(
-        val debug: Boolean = false,
-        val maxClockwisePower: Double = 1.0,
-        val maxCounterClockwisePower: Double = -1.0,
-        val homingPower: Double = 0.6,
-        val homingDirection: RotationDirection = RotationDirection.CLOCKWISE,
-        val minDegrees: Double = 0.0,
-        val maxDegrees: Double = 270.0,
-        val toleranceDegrees: Double = 0.5,
-        val motorPPR: Double = 112.0,
-        val gearRatio: Double = 4.0,
-        val pidfCoefficients: PIDFCoefficients = PIDFCoefficients(0.5, 0.0, 0.1, 0.2),
-        val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-        val brake: Boolean = false
-    ) {
-
-        // We multiply by 4 because we care about CPR not PPR. (We use PPR in the configuration
-        // because that is what most manufacturers list on their websites).
-        val ticksPerDegree = motorPPR * 4 * gearRatio
-
-        companion object {
-            fun fromJson(): Configuration {
-                try {
-                    val rawText = File("$SD_CARD_PATH/turret.json").readText()
-                    return Json.decodeFromString(rawText)
-                } catch (exception: Exception) {
-                    FeatureRegistrar.activeOpMode.telemetry.addLine("${exception.message}")
-                    return Configuration()
-                }
-            }
-        }
-    }
 
     var configuration = Configuration.fromJson()
         set(value) {
@@ -102,8 +67,8 @@ object Turret: Subsystem {
     // Hooks
 
     override fun postUserInitHook(opMode: Wrapper) {
-//        turretMotor.direction = configuration.motorDirection
-//        if (configuration.brake) turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        turretMotor.direction = configuration.motorDirection
+        if (configuration.brake) turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -138,7 +103,7 @@ object Turret: Subsystem {
 
         return Lambda("turret-set-position-$clippedTargetDegrees")
             .setExecute {
-                turretMotor.power = controller.calculate(degrees, clippedTargetDegrees)
+                turretMotor.power = controller.calculate(degrees, targetDegrees)
             }
             .setEnd {
                 turretMotor.power = 0.0
@@ -191,4 +156,38 @@ object Turret: Subsystem {
     annotation class Attach
 
     // ---------------------------------------------------------------------------------------------
+}
+
+@Serializable
+data class Configuration(
+    val debug: Boolean = false,
+    val maxClockwisePower: Double = 1.0,
+    val maxCounterClockwisePower: Double = -1.0,
+    val homingPower: Double = 0.6,
+    val homingDirection: RotationDirection = RotationDirection.CLOCKWISE,
+    val minDegrees: Double = 0.0,
+    val maxDegrees: Double = 270.0,
+    val toleranceDegrees: Double = 0.5,
+    val motorPPR: Double = 112.0,
+    val gearRatio: Double = 4.0,
+    val pidfCoefficients: PIDFCoefficients = PIDFCoefficients(0.5, 0.0, 0.1, 0.2),
+    val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
+    val brake: Boolean = false
+) {
+
+    // We multiply by 4 because we care about CPR not PPR. (We use PPR in the configuration
+    // because that is what most manufacturers list on their websites).
+    val ticksPerDegree = motorPPR * 4 * gearRatio
+
+    companion object {
+        fun fromJson(): Configuration {
+            try {
+                val rawText = File("$SD_CARD_PATH/turret.json").readText()
+                return Json.decodeFromString(rawText)
+            } catch (exception: Exception) {
+                FeatureRegistrar.activeOpMode.telemetry.addLine("${exception.message}")
+                return Configuration()
+            }
+        }
+    }
 }
