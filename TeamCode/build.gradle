@@ -15,6 +15,7 @@
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
 
 android {
     namespace = 'org.firstinspires.ftc.teamcode'
@@ -41,4 +42,6 @@ dependencies {
     implementation project(':FtcRobotController')
     implementation("dev.frozenmilk.dairy:Core:2.2.4")
     implementation("dev.frozenmilk.mercurial:Mercurial:1.0.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+
 }

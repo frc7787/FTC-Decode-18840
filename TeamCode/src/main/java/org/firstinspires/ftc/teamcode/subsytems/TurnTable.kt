@@ -6,6 +6,7 @@ import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.subsystems.Subsystem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.firstinspires.ftc.teamcode.utility.SD_CARD_PATH
 import java.io.File
 
 object TurnTable: Subsystem {
@@ -22,7 +23,7 @@ object TurnTable: Subsystem {
 
             fun fromJson(): Configuration {
                 try {
-                    val rawText = File("turn-table-config.json").readText()
+                    val rawText = File("$SD_CARD_PATH/turn-table.json").readText()
                     return Json.decodeFromString(rawText)
                 } catch (_: Exception) {
                     return Configuration()

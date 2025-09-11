@@ -11,11 +11,13 @@ import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.commands.Lambda
 import dev.frozenmilk.mercurial.commands.groups.Sequential
 import dev.frozenmilk.mercurial.subsystems.Subsystem
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.firstinspires.ftc.teamcode.control.PIDFCoefficients
 import org.firstinspires.ftc.teamcode.control.PIDFController
 import org.firstinspires.ftc.teamcode.utility.RotationDirection
+import org.firstinspires.ftc.teamcode.utility.SD_CARD_PATH
 import java.io.File
 import kotlin.math.abs
 
@@ -23,15 +25,15 @@ object Turret: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Hardware
 
-    private val turretMotor by subsystemCell {
+    private val turretMotor by lazy {
         FeatureRegistrar.activeOpMode.hardwareMap["turretMotor"] as DcMotorEx
     }
 
-    private val rightLimitSwitch by subsystemCell {
+    private val rightLimitSwitch by lazy {
         FeatureRegistrar.activeOpMode.hardwareMap["rightLimitSwitch"] as DigitalChannel
     }
 
-    private val leftLimitSwitch by subsystemCell {
+    private val leftLimitSwitch by lazy {
         FeatureRegistrar.activeOpMode.hardwareMap["leftLimitSwitch"] as DigitalChannel
     }
 
@@ -52,14 +54,15 @@ object Turret: Subsystem {
         val gearRatio: Double = 4.0,
         val pidfCoefficients: PIDFCoefficients = PIDFCoefficients(0.5, 0.0, 0.1, 0.2),
         val motorDirection: DcMotorSimple.Direction = DcMotorSimple.Direction.FORWARD,
-        val brake: Boolean = true
+        val brake: Boolean = false
     ) {
 
+        @Contextual
         val controller = PIDFController(
             pidfCoefficients,
             toleranceDegrees,
-            maxClockwisePower,
-            maxCounterClockwisePower
+            maxCounterClockwisePower,
+            maxClockwisePower
         )
 
         // We multiply by 4 because we care about CPR not PPR. (We use PPR in the configuration
@@ -69,9 +72,10 @@ object Turret: Subsystem {
         companion object {
             fun fromJson(): Configuration {
                 try {
-                    val rawText = File("turret-config.json").readText()
+                    val rawText = File("$SD_CARD_PATH/turret.json").readText()
                     return Json.decodeFromString(rawText)
-                } catch (_: Exception) {
+                } catch (exception: Exception) {
+                    FeatureRegistrar.activeOpMode.telemetry.addLine("${exception.message}")
                     return Configuration()
                 }
             }
@@ -91,9 +95,9 @@ object Turret: Subsystem {
     // ---------------------------------------------------------------------------------------------
     // Hooks
 
-    override fun preUserInitHook(opMode: Wrapper) {
-        turretMotor.direction = configuration.motorDirection
-        if (configuration.brake) turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+    override fun postUserInitHook(opMode: Wrapper) {
+//        turretMotor.direction = configuration.motorDirection
+//        if (configuration.brake) turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -173,7 +177,7 @@ object Turret: Subsystem {
     // Subsystem Boilerplate
 
     override var dependency: Dependency<*>
-            = Subsystem.DEFAULT_DEPENDENCY and SingleAnnotation(Attach::class.java)
+            = Subsystem.DEFAULT_DEPENDENCY and SingleAnnotation(Turret.Attach::class.java)
 
     @Retention(AnnotationRetention.RUNTIME)
     @Target(AnnotationTarget.CLASS)

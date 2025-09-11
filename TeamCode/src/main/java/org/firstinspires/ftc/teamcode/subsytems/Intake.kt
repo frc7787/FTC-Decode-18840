@@ -5,6 +5,7 @@ import dev.frozenmilk.dairy.core.dependency.annotation.SingleAnnotation
 import dev.frozenmilk.dairy.core.wrapper.Wrapper
 import dev.frozenmilk.mercurial.subsystems.Subsystem
 import kotlinx.serialization.json.Json
+import org.firstinspires.ftc.teamcode.utility.SD_CARD_PATH
 import java.io.File
 
 object Intake: Subsystem {
@@ -18,7 +19,7 @@ object Intake: Subsystem {
         companion object {
             fun fromJson(): Configuration {
                 try {
-                    val rawText = File("intake-configuration.json").readText()
+                    val rawText = File("$SD_CARD_PATH/intake.json").readText()
                     return Json.decodeFromString(rawText)
                 } catch (_: Exception) {
                     return Configuration()
