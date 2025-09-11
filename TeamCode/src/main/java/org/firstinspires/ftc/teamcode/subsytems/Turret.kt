@@ -57,14 +57,6 @@ object Turret: Subsystem {
         val brake: Boolean = false
     ) {
 
-        @Contextual
-        val controller = PIDFController(
-            pidfCoefficients,
-            toleranceDegrees,
-            maxCounterClockwisePower,
-            maxClockwisePower
-        )
-
         // We multiply by 4 because we care about CPR not PPR. (We use PPR in the configuration
         // because that is what most manufacturers list on their websites).
         val ticksPerDegree = motorPPR * 4 * gearRatio
@@ -83,6 +75,20 @@ object Turret: Subsystem {
     }
 
     var configuration = Configuration.fromJson()
+        set(value) {
+            controller = PIDFController(
+                value.pidfCoefficients,
+                value.maxCounterClockwisePower,
+                value.maxClockwisePower
+            )
+            field = value
+        }
+
+    private var controller = PIDFController(
+        configuration.pidfCoefficients,
+        configuration.maxCounterClockwisePower,
+        configuration.maxClockwisePower
+    )
 
     // ---------------------------------------------------------------------------------------------
     // State
@@ -132,7 +138,7 @@ object Turret: Subsystem {
 
         return Lambda("turret-set-position-$clippedTargetDegrees")
             .setExecute {
-                turretMotor.power = configuration.controller.calculate(degrees, clippedTargetDegrees)
+                turretMotor.power = controller.calculate(degrees, clippedTargetDegrees)
             }
             .setEnd {
                 turretMotor.power = 0.0
