@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 import org.firstinspires.ftc.teamcode.control.PIDFCoefficients
 import org.firstinspires.ftc.teamcode.control.PIDFController
 import org.firstinspires.ftc.teamcode.utility.RotationDirection
-import org.firstinspires.ftc.teamcode.utility.SD_CARD_PATH
+import org.firstinspires.ftc.teamcode.utility.ONBOT_JAVA_PATH
 import java.io.File
 import kotlin.math.abs
 
@@ -182,7 +182,7 @@ data class Configuration(
     companion object {
         fun fromJson(): Configuration {
             try {
-                val rawText = File("$SD_CARD_PATH/turret.json").readText()
+                val rawText = File("$ONBOT_JAVA_PATH/turret.json").readText()
                 return Json.decodeFromString(rawText)
             } catch (exception: Exception) {
                 FeatureRegistrar.activeOpMode.telemetry.addLine("${exception.message}")
