@@ -24,6 +24,15 @@ android {
         jvmTarget = 1.8
     }
 
+    kotlin {
+        compilerOptions {
+            freeCompilerArgs.add("-Xcontext-sensitive-resolution")
+        }
+        sourceSets.configureEach {
+            languageSettings.enableLanguageFeature("ExplicitBackingFields")
+        }
+    }
+
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
