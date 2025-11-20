@@ -18,6 +18,5 @@ class TestIntake: OpMode() {
         intake.runAtPower(intakePower)
 
         intake.update()
-        intake.debug(telemetry)
     }
 }

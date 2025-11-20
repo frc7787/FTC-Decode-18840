@@ -87,7 +87,6 @@ class TeleOp: OpMode() {
 
         shooter.debug(telemetry)
         transfer.debug(telemetry)
-        intake.debug(telemetry)
 
         transfer.update()
         intake.update()
