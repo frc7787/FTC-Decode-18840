@@ -2,8 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.firstinspires.ftc.teamcode.control.FFController
-import org.firstinspires.ftc.teamcode.control.PIDController
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.math.isReal
 
 class Intake(hardwareMap: HardwareMap) {
@@ -17,6 +16,15 @@ class Intake(hardwareMap: HardwareMap) {
             field = power.coerceIn(MIN_POWER, MAX_POWER)
             motor.power = field
         }
+
+    fun debug(telemetry: Telemetry, verbose: Boolean = false) {
+        telemetry.addLine("---- Intake ----")
+        telemetry.addLine("Power: $power")
+        if (verbose) {
+            telemetry.addLine("Direction: ${motor.direction}")
+            telemetry.addLine("Zero Power Behaviour: ${motor.zeroPowerBehavior}")
+        }
+    }
 
     private companion object {
         const val MOTOR_NAME = "intakeMotor"

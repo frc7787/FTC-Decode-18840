@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems.shooter
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo.Direction
 import com.qualcomm.robotcore.hardware.ServoImplEx
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.math.isReal
 
 internal class Hood(hardwareMap: HardwareMap) {
@@ -23,6 +24,15 @@ internal class Hood(hardwareMap: HardwareMap) {
             field = deg.coerceIn(MIN_DEG, MAX_DEG) / DEGREES_PER_SERVO_STEP
             servo.position = field
         }
+
+    fun debug(telemetry: Telemetry, verbose: Boolean = false) {
+        telemetry.addLine("---- Hood ----")
+        telemetry.addLine("Position: ${servo.position}")
+        telemetry.addLine("Angle (Deg): $angle")
+        if (verbose) {
+            telemetry.addLine("Direction: ${servo.direction}")
+        }
+    }
 
     private companion object {
         const val SERVO_NAME = "hoodServo"

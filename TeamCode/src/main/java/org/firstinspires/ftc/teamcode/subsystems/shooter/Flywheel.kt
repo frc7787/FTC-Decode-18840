@@ -4,18 +4,15 @@ import com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.control.FFController
 import org.firstinspires.ftc.teamcode.control.PIDController
 import org.firstinspires.ftc.teamcode.math.isReal
 
 internal class Flywheel(hardwareMap: HardwareMap) {
-    // Hardware
-
     private val leaderMotor   = hardwareMap[LEADER_MOTOR_NAME] as DcMotorEx
     private val followerMotor = hardwareMap[FOLLOWER_MOTOR_NAME] as DcMotorEx
-
-    // Init
 
     init {
         leaderMotor.zeroPowerBehavior   = MOTOR_ZERO_POWER_BEHAVIOR
@@ -23,32 +20,6 @@ internal class Flywheel(hardwareMap: HardwareMap) {
 
         leaderMotor.direction   = MOTOR_DIRECTION
         followerMotor.direction = MOTOR_DIRECTION
-    }
-
-    // Config
-
-    private companion object {
-        const val LEADER_MOTOR_NAME   = "leaderFlywheelMotor"
-        const val FOLLOWER_MOTOR_NAME = "followerFlywheelMotor"
-
-        val MOTOR_DIRECTION           = Direction.REVERSE
-        val MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
-
-        const val P = 0.1
-        const val I = 0.0
-        const val D = 0.01
-
-        const val KV = 0.01
-        const val KA = 0.0
-        const val KS = 0.2
-
-        const val MIN_RPM = -1900.0
-        const val MAX_RPM = 1900.0
-
-        const val FLYWHEEL_TARGET_RPM = 1900.0
-
-        const val MIN_POWER = -1.0
-        const val MAX_POWER = 1.0
     }
 
     private val pid = PIDController(P, I, D).also { pid ->
@@ -94,5 +65,40 @@ internal class Flywheel(hardwareMap: HardwareMap) {
     fun stop() {
         leaderMotor.power   = 0.0
         followerMotor.power = 0.0
+    }
+
+    fun debug(telemetry: Telemetry, verbose: Boolean = false) {
+        telemetry.addLine("---- Flywheel ----")
+        telemetry.addLine("Power: ${leaderMotor.power}")
+        telemetry.addLine("RPM: $rpm")
+        telemetry.addLine("Current (Amps): $amps")
+        if (verbose) {
+            telemetry.addLine("Direction: ${leaderMotor.direction}")
+            telemetry.addLine("Zero Power Behavior: ${leaderMotor.zeroPowerBehavior}")
+        }
+    }
+
+    private companion object {
+        const val LEADER_MOTOR_NAME   = "leaderFlywheelMotor"
+        const val FOLLOWER_MOTOR_NAME = "followerFlywheelMotor"
+
+        val MOTOR_DIRECTION           = Direction.REVERSE
+        val MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
+
+        const val P = 0.1
+        const val I = 0.0
+        const val D = 0.01
+
+        const val KV = 0.01
+        const val KA = 0.0
+        const val KS = 0.2
+
+        const val MIN_RPM = -1900.0
+        const val MAX_RPM = 1900.0
+
+        const val FLYWHEEL_TARGET_RPM = 1900.0
+
+        const val MIN_POWER = -1.0
+        const val MAX_POWER = 1.0
     }
 }

@@ -9,8 +9,6 @@ class Shooter(hardwareMap: HardwareMap) {
     private val hood     = Hood(hardwareMap)
     private val flywheel = Flywheel(hardwareMap)
 
-    // State
-
     val flywheelRpm: Double
         get() {
             return flywheel.rpm
@@ -23,11 +21,8 @@ class Shooter(hardwareMap: HardwareMap) {
 
     val amps: Double
         get() {
-            // Hood current draw is negligible
             return flywheel.amps
         }
-
-    // -------------------------------------------------------
 
     private fun distanceToHoodAngle(distance: Double): Double {
         TODO()
@@ -45,6 +40,8 @@ class Shooter(hardwareMap: HardwareMap) {
         flywheel.stop()
     }
 
-
-    // -------------------------------------------------------
+    fun debug(telemetry: Telemetry, verbose: Boolean = false) {
+        flywheel.debug(telemetry, verbose)
+        hood.debug(telemetry, verbose)
+    }
 }
