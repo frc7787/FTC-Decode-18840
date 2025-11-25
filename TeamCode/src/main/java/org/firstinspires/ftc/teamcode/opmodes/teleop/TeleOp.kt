@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes
+package org.firstinspires.ftc.teamcode.opmodes.teleop
 
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Gamepad
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.Intake
-import org.firstinspires.ftc.teamcode.subsystems.Shooter
+import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
 import kotlin.math.abs
 
@@ -48,15 +48,22 @@ class TeleOp: OpMode() {
 
         // Drive
 
-        val leftStickY  = gamepad1.left_stick_y.toDouble()
-        val leftStickX  = gamepad1.left_stick_x.toDouble()
-        val rightStickX = gamepad1.right_stick_x.toDouble()
+        val drive = run {
+            val raw = gamepad1.left_stick_y.toDouble()
+            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
+        }
 
-        follower.setTeleOpDrive(
-            leftStickY * abs(leftStickY),
-            leftStickX * abs(leftStickX),
-            rightStickX * abs(rightStickX)
-        )
+        val strafe = run {
+            val raw = gamepad1.left_stick_x.toDouble()
+            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
+        }
+
+        val turn = run {
+            val raw = gamepad1.right_stick_x.toDouble()
+            if (abs(raw) < 0.05) 0.0 else (raw * abs(raw)) * 0.9
+        }
+
+        follower.setTeleOpDrive(drive, strafe, turn)
 
         // Shooter
 
@@ -65,15 +72,16 @@ class TeleOp: OpMode() {
         }
 
         if (shooterToggle) {
-            shooter.runAtPower(1.0)
+            shooter.spinUp()
         } else {
-            shooter.runAtPower(0.0)
+            shooter.stop()
         }
 
         // Intake
 
-        val intakePower = (gamepad2.left_trigger - gamepad2.right_trigger).toDouble()
-        intake.runAtPower(intakePower)
+        intake.power = (gamepad2.left_trigger - gamepad2.right_trigger)
+            .toDouble()
+            .coerceIn(-1.0, 0.8)
 
         // Transfer
 
@@ -83,14 +91,10 @@ class TeleOp: OpMode() {
             transfer.down()
         }
 
-        //
-
-        shooter.debug(telemetry)
-        transfer.debug(telemetry)
-
-        transfer.update()
+        shooter.update(0.0)
         intake.update()
-        shooter.update()
+        transfer.update()
+
         follower.update()
     }
 }

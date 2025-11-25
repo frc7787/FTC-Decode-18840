@@ -1,76 +1,67 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
-import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.hardware.Servo.Direction
 import org.firstinspires.ftc.robotcore.external.Telemetry
 
-@Configurable
 class Transfer(hardwareMap: HardwareMap) {
+    // -------------------------------------------------------
+    // Hardware
+
+    private val servo = hardwareMap[SERVO_NAME] as Servo
+
     // -------------------------------------------------------
     // Configuration
 
-    private val transferServo = hardwareMap[TRANSFER_SERVO_NAME] as Servo
+    private companion object {
+        const val MIN_POSITION = 0.49
+        const val MAX_POSITION = 0.62
 
-    companion object {
-        private const val TRANSFER_SERVO_NAME = "transferServo"
+        const val UP_POSITION   = 0.59
+        const val DOWN_POSITION = 0.51
+        const val SERVO_NAME = "transferServo"
 
-        @JvmField
-        var TRANSFER_SERVO_DIRECTION = Direction.REVERSE
-        @JvmField
-        var UP_POSITION = 0.57
-        @JvmField
-        var DOWN_POSITION = 0.50
+        val SERVO_DIRECTION = Direction.REVERSE
     }
 
     // -------------------------------------------------------
     // Construction
 
     init {
-        transferServo.direction = TRANSFER_SERVO_DIRECTION
-        transferServo.position = DOWN_POSITION
+        servo.direction = SERVO_DIRECTION
+        servo.position = DOWN_POSITION
     }
 
-    // -------------------------------------------------------
     // State
 
-    var state: State = State.DOWN
-        private set
-
-    val position: Double
-        get() {
-            return state.position
+    var position: Double = MIN_POSITION
+        set(position) {
+            field = position.coerceIn(MIN_POSITION, MAX_POSITION)
         }
 
     // -------------------------------------------------------
     // Core
 
-    fun update() {
-        transferServo.position = position
-    }
-
     fun up() {
-        state = State.UP
+        position = UP_POSITION
     }
 
     fun down() {
-        state = State.DOWN
+        position = DOWN_POSITION
+    }
+
+    fun update() {
+        servo.position = position
     }
 
     fun debug(telemetry: Telemetry, verbose: Boolean = false) {
         telemetry.addLine()
         telemetry.addLine("--- Transfer ---")
-        telemetry.addLine("State: $state")
-        telemetry.addLine("Position: $position")
+        telemetry.addLine("Position: ${servo.position}")
         if (verbose) {
-            telemetry.addLine("Direction: $TRANSFER_SERVO_DIRECTION")
+            telemetry.addLine("Direction: $SERVO_DIRECTION")
         }
-    }
-
-    enum class State(val position: Double) {
-        UP(UP_POSITION),
-        DOWN(DOWN_POSITION),
     }
 
     // -------------------------------------------------------

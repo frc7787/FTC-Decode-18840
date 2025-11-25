@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode.control
 
 import com.qualcomm.robotcore.util.ElapsedTime
-import org.firstinspires.ftc.teamcode.math.enforceNotNaNOrInfinite
-import kotlin.jvm.Throws
+import org.firstinspires.ftc.teamcode.math.isReal
 import kotlin.math.abs
 
 class PIDController(val coefficients: PIDCoefficients) {
@@ -26,29 +25,64 @@ class PIDController(val coefficients: PIDCoefficients) {
     var integralMax = 0.25
         @Throws(IllegalArgumentException::class)
         set(max) {
-            max.enforceNotNaNOrInfinite("integral max")
+            require(max.isReal()) {
+                "Expected real integral max. Got: $max"
+            }
             require(max > 0.0) {
                 "Expected integral max > 0.0. Got: $max"
             }
+
+            reset()
+
             field = max
         }
 
     var integralMin = -0.25
         @Throws(IllegalArgumentException::class)
         set(min) {
-            min.enforceNotNaNOrInfinite("integral min")
+            require(min.isReal()) {
+                "Expected real integral min. Got: $min"
+            }
             require(min < 0.0) {
                 "Expected integral min < 0.0. Got: $min"
             }
+
+            reset()
+
             field = min
         }
 
     var tolerance = 10.0
+        @Throws(IllegalArgumentException::class)
         set(tolerance) {
-            tolerance.enforceNotNaNOrInfinite("tolerance")
+            require(tolerance.isReal()) {
+                "Expected real tolerance. Got: $tolerance"
+            }
             require(tolerance >= 0.0) {
                 "Expected positive tolerance. Got: $tolerance"
             }
+
+            reset()
+
+            field = tolerance
+        }
+
+    var minOutput = -1.0
+        @Throws(IllegalArgumentException::class)
+        set(min) {
+            require(min.isReal()) {
+                "Expected real min output. Got: $min"
+            }
+            field = min
+        }
+
+    var maxOutput = 1.0
+        @Throws(IllegalArgumentException::class)
+        set(max) {
+            require(max.isReal()) {
+                "Expected real max output. Got: $max"
+            }
+            field = max
         }
 
     // ----------
@@ -62,8 +96,12 @@ class PIDController(val coefficients: PIDCoefficients) {
      */
     @Throws(IllegalArgumentException::class)
     fun calculate(state: Double, reference: Double): Double {
-        state.enforceNotNaNOrInfinite("state")
-        reference.enforceNotNaNOrInfinite("reference")
+        require(state.isReal()) {
+            "Expected real state. Got: $state"
+        }
+        require(reference.isReal()) {
+            "Expected real reference. Got: $reference"
+        }
 
         if (isFirstIteration) {
             timer.reset()
@@ -96,9 +134,12 @@ class PIDController(val coefficients: PIDCoefficients) {
         previousError     = error
         previousReference = reference
 
-        return proportional + integral + derivative
+        return (proportional + integral + derivative).coerceIn(minOutput, maxOutput)
     }
 
+    /**
+     * Resets the PID controller.
+     */
     fun reset() {
         isFirstIteration = true
         previousError     = 0.0

@@ -1,11 +1,13 @@
-package org.firstinspires.ftc.teamcode.opmodes
+package org.firstinspires.ftc.teamcode.opmodes.test
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import kotlin.math.abs
 
 @TeleOp(group = "Test")
+@Disabled
 class TestMecanumDrive: OpMode() {
 
     private val mecanumDrive by lazy {

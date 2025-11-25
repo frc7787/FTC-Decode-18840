@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.opmodes
+package org.firstinspires.ftc.teamcode.opmodes.test
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.ElapsedTime
@@ -8,7 +9,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import java.io.File
 
 @Autonomous(group = "Test")
-class TestShooterCurrentDraw: OpMode() {
+@Disabled
+class TestFlywheelCurrentDraw: OpMode() {
 
     private val leaderShooterMotor by lazy {
         hardwareMap.get("leaderShooterMotor") as DcMotorEx
@@ -38,7 +40,8 @@ class TestShooterCurrentDraw: OpMode() {
             terminateOpModeNow()
         }
 
-        val current = leaderShooterMotor.getCurrent(CurrentUnit.MILLIAMPS) + followerShooterMotor.getCurrent(CurrentUnit.MILLIAMPS)
+        val current = leaderShooterMotor.getCurrent(CurrentUnit.MILLIAMPS) + followerShooterMotor.getCurrent(
+            CurrentUnit.MILLIAMPS)
         val velocity = leaderShooterMotor.velocity
 
         data.add("$current,$velocity")

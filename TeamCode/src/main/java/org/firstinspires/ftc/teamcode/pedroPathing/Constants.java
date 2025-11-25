@@ -20,7 +20,7 @@ public class Constants {
             .lateralZeroPowerAcceleration(-62.220)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.25, 0.0, 0.02, 0.03))
             .headingPIDFCoefficients(new PIDFCoefficients(1.2, 0.0, 0.1, 0.025))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.0055, 0.0, 0.0, 0.6, 0.065))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.0055, 0.0, 0.0, 0.6, 0.063))
             .mass(8.65);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 0.9, 1);
@@ -34,7 +34,7 @@ public class Constants {
     }
 
     public static PinpointConstants pinpointConstants = new PinpointConstants()
-            .forwardPodY(-6.5)
+            .forwardPodY(6.5)
             .strafePodX(-0.8)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
@@ -53,6 +53,5 @@ public class Constants {
             .rightRearMotorDirection(Direction.REVERSE)
             .xVelocity(91.107)
             .yVelocity(75.501)
-            .useVoltageCompensation(true)
             .useBrakeModeInTeleOp(true);
 }
