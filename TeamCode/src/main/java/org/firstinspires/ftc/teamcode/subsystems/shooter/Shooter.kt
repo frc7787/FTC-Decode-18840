@@ -16,13 +16,16 @@ class Shooter(hardwareMap: HardwareMap) {
             return flywheel.rpm
         }
 
+    val hoodAngle: Double
+        get() {
+            return hood.angle
+        }
+
     val amps: Double
         get() {
             // Hood current draw is negligible
             return flywheel.amps
         }
-
-    var state: State = State.STOPPED
 
     // -------------------------------------------------------
 
@@ -30,37 +33,18 @@ class Shooter(hardwareMap: HardwareMap) {
         TODO()
     }
 
+    fun adjustHood(distance: Double) {
+        hood.angle = distanceToHoodAngle(distance)
+    }
+
     fun spinUp() {
-        state = State.ACTIVE
+        flywheel.spinUp()
     }
 
     fun stop() {
-        state = State.STOPPED
+        flywheel.stop()
     }
 
-    fun update(distance: Double) {
-        require(distance.isReal()) {
-            "Expected real april tag distance. Got: $distance"
-        }
-        require(distance > 0.0) {
-            "Expected positive april tag distance. Got: $distance"
-        }
-
-        when (state) {
-            State.ACTIVE -> {
-                 flywheel.spinUp()
-            }
-            State.STOPPED -> {
-                 flywheel.stop()
-            }
-        }
-        hood.setAngle(distanceToHoodAngle(distance))
-    }
 
     // -------------------------------------------------------
-
-    enum class State {
-        ACTIVE,
-        STOPPED
-    }
 }

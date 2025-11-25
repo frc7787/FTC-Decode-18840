@@ -14,21 +14,28 @@ class TestMecanumDrive: OpMode() {
         Constants.createFollower(hardwareMap)
     }
 
-    override fun init() {
-
-    }
+    override fun init() {}
 
     override fun start() {
         mecanumDrive.startTeleOpDrive(true)
     }
 
     override fun loop() {
-        var drivePower = -gamepad1.left_stick_y.toDouble()
-        drivePower *= abs(drivePower)
-        var strafePower = gamepad1.left_stick_x.toDouble()
-        strafePower *= abs(strafePower)
-        var turnPower = gamepad1.right_stick_x.toDouble()
-        turnPower *= abs(turnPower)
-        mecanumDrive.setTeleOpDrive(drivePower, strafePower, turnPower)
+        val drive = run {
+            val raw = gamepad1.left_stick_y.toDouble()
+            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
+        }
+
+        val strafe = run {
+            val raw = gamepad1.left_stick_x.toDouble()
+            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
+        }
+
+        val turn = run {
+            val raw = gamepad1.right_stick_x.toDouble()
+            if (abs(raw) < 0.05) 0.0 else (raw * abs(raw))
+        }
+
+        mecanumDrive.setTeleOpDrive(drive, strafe, turn)
     }
 }

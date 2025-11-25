@@ -6,18 +6,15 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.firstinspires.ftc.teamcode.subsystems.shooter.Flywheel
 import java.io.File
 
 @Autonomous(group = "Test")
 @Disabled
 class TestFlywheelCurrentDraw: OpMode() {
 
-    private val leaderShooterMotor by lazy {
-        hardwareMap.get("leaderShooterMotor") as DcMotorEx
-    }
-
-    private val followerShooterMotor by lazy {
-        hardwareMap.get("followerShooterMotor") as DcMotorEx
+    private val flywheel by lazy {
+        Flywheel(hardwareMap)
     }
 
     val data = mutableListOf<String>()
@@ -27,8 +24,6 @@ class TestFlywheelCurrentDraw: OpMode() {
     override fun init() {}
 
     override fun start() {
-        leaderShooterMotor.power   = 1.0
-        followerShooterMotor.power = 1.0
         timer.reset()
     }
 
@@ -40,18 +35,16 @@ class TestFlywheelCurrentDraw: OpMode() {
             terminateOpModeNow()
         }
 
-        val current = leaderShooterMotor.getCurrent(CurrentUnit.MILLIAMPS) + followerShooterMotor.getCurrent(
-            CurrentUnit.MILLIAMPS)
-        val velocity = leaderShooterMotor.velocity
+        val milliamps = flywheel.amps * 1000.0
+        val rpm       = flywheel.rpm
 
-        data.add("$current,$velocity")
+        data.add("$milliamps,$rpm")
     }
 
     private fun saveData() {
-        val file = File("sdcard/FIRST/java/src/org/firstinspires/ftc/teamcode/ShooterLog.txt")
-        val writer = file.writer()
+        val writer = File("sdcard/FIRST/java/src/org/firstinspires/ftc/teamcode/ShooterLog.txt").writer()
 
-        writer.write("millliamps,velocity\n")
+        writer.write("amps,velocity\n")
         data.forEach { element ->
             writer.write("${element}\n")
         }

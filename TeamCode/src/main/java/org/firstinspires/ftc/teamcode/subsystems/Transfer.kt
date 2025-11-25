@@ -44,15 +44,11 @@ class Transfer(hardwareMap: HardwareMap) {
     // Core
 
     fun up() {
-        position = UP_POSITION
+        servo.position = UP_POSITION
     }
 
     fun down() {
-        position = DOWN_POSITION
-    }
-
-    fun update() {
-        servo.position = position
+        servo.position = DOWN_POSITION
     }
 
     fun debug(telemetry: Telemetry, verbose: Boolean = false) {

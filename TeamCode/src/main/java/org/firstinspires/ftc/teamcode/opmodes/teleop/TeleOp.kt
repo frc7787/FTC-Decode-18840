@@ -91,10 +91,6 @@ class TeleOp: OpMode() {
             transfer.down()
         }
 
-        shooter.update(0.0)
-        intake.update()
-        transfer.update()
-
         follower.update()
     }
 }
