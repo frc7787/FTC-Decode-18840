@@ -5,8 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Gamepad
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 import org.firstinspires.ftc.teamcode.subsystems.Intake
-import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
 import kotlin.math.abs
 
@@ -17,8 +17,8 @@ class TeleOp: OpMode() {
         Intake(hardwareMap)
     }
 
-    private val shooter by lazy {
-        Shooter(hardwareMap)
+    private val flywheel by lazy {
+        Flywheel(hardwareMap)
     }
 
     private val transfer by lazy {
@@ -54,16 +54,17 @@ class TeleOp: OpMode() {
         }
 
         val strafe = run {
-            val raw = gamepad1.left_stick_x.toDouble()
+            val raw = -gamepad1.left_stick_x.toDouble()
             if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
         }
 
         val turn = run {
-            val raw = gamepad1.right_stick_x.toDouble()
+            val raw = -gamepad1.right_stick_x.toDouble()
             if (abs(raw) < 0.05) 0.0 else (raw * abs(raw)) * 0.9
         }
 
         follower.setTeleOpDrive(drive, strafe, turn)
+        follower.update()
 
         // Shooter
 
@@ -72,16 +73,14 @@ class TeleOp: OpMode() {
         }
 
         if (shooterToggle) {
-            shooter.spinUp()
+            flywheel.setPower(1.0)
         } else {
-            shooter.stop()
+            flywheel.stop()
         }
 
         // Intake
 
-        intake.power = (gamepad2.left_trigger - gamepad2.right_trigger)
-            .toDouble()
-            .coerceIn(-1.0, 0.8)
+        intake.power = (gamepad2.left_trigger - gamepad2.right_trigger).toDouble()
 
         // Transfer
 
@@ -91,6 +90,5 @@ class TeleOp: OpMode() {
             transfer.down()
         }
 
-        follower.update()
     }
 }
