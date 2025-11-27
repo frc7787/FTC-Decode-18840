@@ -17,7 +17,7 @@ import kotlin.math.PI
 class BlueGoal: LinearOpMode() {
 
     private companion object {
-        val START = Pose(21.5, 123.0, Math.toRadians(143.0))
+        val START = Pose(19.0, 122.0, Math.toRadians(53.0))
         val SHOOT = Pose(56.0, 99.0, Math.toRadians(143.0))
 
         val END = Pose(56.0, 105.0, PI)

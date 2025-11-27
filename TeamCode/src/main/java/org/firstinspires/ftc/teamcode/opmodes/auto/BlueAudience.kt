@@ -108,7 +108,7 @@ class BlueAudience: LinearOpMode() {
     }
 
     private companion object {
-        val START = Pose(56.0, 6.0, PI)
+        val START = Pose(56.0, 6.0, PI / 2.0)
         val SHOOT = Pose(61.0, 23.0, Math.toRadians(110.0))
 
         val END = Pose(50.0, 23.0, PI)
