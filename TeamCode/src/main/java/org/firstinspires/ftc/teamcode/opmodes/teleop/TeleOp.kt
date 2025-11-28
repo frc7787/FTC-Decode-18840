@@ -89,6 +89,5 @@ class TeleOp: OpMode() {
         } else {
             transfer.down()
         }
-
     }
 }

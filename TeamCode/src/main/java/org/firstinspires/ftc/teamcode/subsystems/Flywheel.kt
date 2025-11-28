@@ -15,7 +15,7 @@ internal class Flywheel(hardwareMap: HardwareMap) {
     private val followerMotor = hardwareMap[FOLLOWER_MOTOR_NAME] as DcMotorEx
 
     init {
-        leaderMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        leaderMotor.mode   = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         followerMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
 
         leaderMotor.zeroPowerBehavior   = MOTOR_ZERO_POWER_BEHAVIOR
@@ -58,6 +58,10 @@ internal class Flywheel(hardwareMap: HardwareMap) {
     }
 
     fun spinUp(targetRpm: Double) {
+        require(targetRpm.isReal()) {
+            "Expected real target rpm. Got: $targetRpm"
+        }
+
         val rpm = this.rpm // So that it doesn't change in between pid and ff calls
         (pid.calculate(rpm, targetRpm) + ff.calculate(rpm).coerceIn(0.0, MAX_POWER)).also { power ->
             leaderMotor.power   = power

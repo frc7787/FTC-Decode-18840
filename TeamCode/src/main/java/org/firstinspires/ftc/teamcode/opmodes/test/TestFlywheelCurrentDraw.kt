@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmodes.test
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 import java.io.File
 
 @Autonomous(group = "Test")
+@Disabled
 class TestFlywheelCurrentDraw: OpMode() {
 
     private val flywheel by lazy {

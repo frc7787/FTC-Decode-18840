@@ -7,14 +7,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
-import org.firstinspires.ftc.teamcode.util.BluePositions.AUDIENCE_SPIKE_MARK_END
-import org.firstinspires.ftc.teamcode.util.BluePositions.AUDIENCE_SPIKE_MARK_START
-import org.firstinspires.ftc.teamcode.util.BluePositions.GATE_SPIKE_MARK_END
-import org.firstinspires.ftc.teamcode.util.BluePositions.GATE_SPIKE_MARK_START
+import org.firstinspires.ftc.teamcode.util.RedPositions.AUDIENCE_SPIKE_MARK_END
+import org.firstinspires.ftc.teamcode.util.RedPositions.AUDIENCE_SPIKE_MARK_START
+import org.firstinspires.ftc.teamcode.util.RedPositions.GATE_SPIKE_MARK_END
+import org.firstinspires.ftc.teamcode.util.RedPositions.GATE_SPIKE_MARK_START
 import kotlin.math.PI
 
-@Autonomous(group = "Blue")
-class BlueAudience: LinearOpMode() {
+@Autonomous(group = "Red")
+class RedAudience: LinearOpMode() {
 
     private val follower by lazy {
         Constants.createFollower(hardwareMap)
@@ -37,7 +37,7 @@ class BlueAudience: LinearOpMode() {
                 .build(),
             follower.pathBuilder()
                 .addPath(BezierLine(AUDIENCE_SPIKE_MARK_START, AUDIENCE_SPIKE_MARK_END))
-                .setLinearHeadingInterpolation(AUDIENCE_SPIKE_MARK_START.heading, AUDIENCE_SPIKE_MARK_END.heading)
+                .setTangentHeadingInterpolation()
                 .build(),
             follower.pathBuilder()
                 .addPath(BezierLine(AUDIENCE_SPIKE_MARK_END, SHOOT))
@@ -49,16 +49,12 @@ class BlueAudience: LinearOpMode() {
                 .build(),
             follower.pathBuilder()
                 .addPath(BezierLine(GATE_SPIKE_MARK_START, GATE_SPIKE_MARK_END))
-                .setLinearHeadingInterpolation(GATE_SPIKE_MARK_START.heading, GATE_SPIKE_MARK_END.heading)
+                .setTangentHeadingInterpolation()
                 .build(),
             follower.pathBuilder()
                 .addPath(BezierLine(GATE_SPIKE_MARK_END, SHOOT))
                 .setLinearHeadingInterpolation(GATE_SPIKE_MARK_END.heading, SHOOT.heading)
                 .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(SHOOT, END))
-                .setLinearHeadingInterpolation(SHOOT.heading, END.heading)
-                .build()
         )
 
         waitForStart()
@@ -79,7 +75,6 @@ class BlueAudience: LinearOpMode() {
     }
 
     private fun waitAndHold(point: Pose) {
-        telemetry.update()
         timer.reset()
 
         follower.holdPoint(point)
@@ -89,12 +84,10 @@ class BlueAudience: LinearOpMode() {
     }
 
     private companion object {
-        val START = Pose(56.0, 10.0, PI / 2.0)
-        val SHOOT = Pose(61.0, 23.0, Math.toRadians(110.0))
-
-        val END = Pose(50.0, 23.0, PI)
-
         const val SLEEP_MILLISECONDS = 1000
         const val MAX_POWER = 0.6
+
+        val START = Pose(88.0, 10.0, PI / 2.0)
+        val SHOOT = Pose(83.0, 23.0, Math.toRadians(70.0))
     }
 }
