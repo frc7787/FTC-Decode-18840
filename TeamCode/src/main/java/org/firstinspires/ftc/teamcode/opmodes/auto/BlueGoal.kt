@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.teamcode.util.BluePositions
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import kotlin.math.PI
+import kotlin.math.max
+import kotlin.math.min
 
 @Autonomous(group = "Blue")
 class BlueGoal: OpMode() {
@@ -15,58 +17,62 @@ class BlueGoal: OpMode() {
         Constants.createFollower(hardwareMap)
     }
 
-    private val path = follower.pathBuilder()
-        .addPath(
-            BezierLine(
-                START, SHOOT
+    private val startToShoot = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    START, SHOOT
+                )
             )
-        )
-        .setLinearHeadingInterpolation(START.heading, SHOOT.heading)
-        .addPath(
-            BezierLine(
-                SHOOT, BluePositions.GOAL_SPIKE_MARK_START
+            .setLinearHeadingInterpolation(START.heading, SHOOT.heading)
+            .build()!!
+    }
+
+    private val shootToGoalSpikeMarkStart = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    SHOOT, BluePositions.GOAL_SPIKE_MARK_START
+                )
             )
-        )
-        .setLinearHeadingInterpolation(SHOOT.heading, BluePositions.GOAL_SPIKE_MARK_START.heading)
-        .addPath(
-            BezierLine(
-                BluePositions.GOAL_SPIKE_MARK_START, BluePositions.GOAL_SPIKE_MARK_END
+            .setLinearHeadingInterpolation(SHOOT.heading, BluePositions.GOAL_SPIKE_MARK_START.heading)
+            .build()!!
+    }
+
+    private val goalSpikeMarkStartToEnd = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    BluePositions.GOAL_SPIKE_MARK_START, BluePositions.GOAL_SPIKE_MARK_END
+                )
             )
-        )
-        .setTangentHeadingInterpolation()
-        .addPath(
-            BezierLine(
-                BluePositions.GOAL_SPIKE_MARK_END, SHOOT
+            .setTangentHeadingInterpolation()
+            .build()!!
+    }
+
+    private val goalSpikeMarkEndToShoot = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    BluePositions.GOAL_SPIKE_MARK_END, SHOOT
+                )
             )
-        )
-        .setLinearHeadingInterpolation(BluePositions.GOAL_SPIKE_MARK_END.heading, SHOOT.heading)
-        .addPath(
-            BezierLine(
-                SHOOT,
-                BluePositions.GATE_SPIKE_MARK_START
+            .setLinearHeadingInterpolation(BluePositions.GOAL_SPIKE_MARK_END.heading, SHOOT.heading)
+            .build()!!
+    }
+
+    private val shootToEnd = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    SHOOT, END
+                )
             )
-        )
-        .setLinearHeadingInterpolation(SHOOT.heading, BluePositions.GATE_SPIKE_MARK_START.heading)
-        .addPath(
-            BezierLine(
-                BluePositions.GATE_SPIKE_MARK_START,
-                BluePositions.GATE_SPIKE_MARK_END
-            )
-        )
-        .setTangentHeadingInterpolation()
-        .addPath(
-            BezierLine(
-                BluePositions.GATE_SPIKE_MARK_END, SHOOT
-            )
-        )
-        .setLinearHeadingInterpolation(BluePositions.GATE_SPIKE_MARK_END.heading, SHOOT.heading)
-        .addPath(
-            BezierLine(
-                SHOOT, END
-            )
-        )
-        .setLinearHeadingInterpolation(SHOOT.heading, END.heading)
-        .build()!!
+            .setLinearHeadingInterpolation(SHOOT.heading, END.heading)
+            .build()!!
+    }
+
+    private var state: State = State.START
 
     override fun init() {
         follower.setMaxPower(MAX_POWER)
@@ -74,13 +80,25 @@ class BlueGoal: OpMode() {
 
     override fun start() {
         follower.setStartingPose(START)
-        follower.followPath(path)
     }
 
     override fun loop() {
-        follower.update()
-        if (!follower.isBusy) {
-            telemetry.addLine("Finished Path!")
+        when (state) {
+            State.START -> {
+                follower.followPath(startToShoot.invoke(), true)
+                state = state.next()
+            }
+            State.TO_SHOOT_PRELOAD -> {
+                if (!follower.isBusy) {
+                    state = state.next()
+                }
+            }
+            State.SHOOTING_PRELOAD -> {
+                telemetry.addLine("It is finished!")
+            }
+            else -> {
+                telemetry.addLine("How Did We Get Here?")
+            }
         }
     }
 
@@ -91,5 +109,25 @@ class BlueGoal: OpMode() {
         val END = Pose(56.0, 105.0, PI)
 
         const val MAX_POWER = 0.6
+    }
+
+    private enum class State {
+        START,
+        TO_SHOOT_PRELOAD,
+        SHOOTING_PRELOAD,
+        TO_INTAKE_GOAL,
+        INTAKING_GOAL,
+        TO_SHOOT_PICKUP,
+        SHOOTING_PICKUP,
+        TO_END,
+        END;
+
+        fun next(): State {
+            return entries[min(entries.size - 1, ordinal + 1)]
+        }
+
+        fun previous(): State {
+            return entries[max(0, ordinal - 1)]
+        }
     }
 }

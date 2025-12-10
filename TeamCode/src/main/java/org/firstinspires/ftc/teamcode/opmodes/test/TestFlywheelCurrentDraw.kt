@@ -34,10 +34,6 @@ class TestFlywheelCurrentDraw: OpMode() {
             terminateOpModeNow()
         }
 
-        val milliamps = flywheel.amps * 1000.0
-        val rpm       = flywheel.rpm
-
-        data.add("$milliseconds,$milliamps,$rpm")
     }
 
     private fun saveData() {
