@@ -1,18 +1,37 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop
 
+import com.pedropathing.geometry.Pose
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.DigitalChannel
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 import org.firstinspires.ftc.teamcode.subsystems.Intake
+import org.firstinspires.ftc.teamcode.subsystems.MecanumDriveBase
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
 import kotlin.math.abs
 
 @TeleOp(group = "$")
 class TeleOp: OpMode() {
+
+    private val octoquad by lazy {
+        (hardwareMap["octoquad"] as OctoQuad).also { octoquad ->
+            octoquad.channelBankConfig = OctoQuad.ChannelBankConfig.ALL_PULSE_WIDTH
+            octoquad.saveParametersToFlash()
+        }
+    }
+
+    private val indicatorChannelOne by lazy {
+        hardwareMap["indicatorChannelOne"] as DigitalChannel
+    }
+
+    private val indicatorChannelTwo by lazy {
+        hardwareMap["indicatorChannelTwo"] as DigitalChannel
+    }
 
     private val intake by lazy {
         Intake(hardwareMap)
@@ -26,12 +45,12 @@ class TeleOp: OpMode() {
         Transfer(hardwareMap)
     }
 
-    private val follower by lazy {
-        Constants.createFollower(hardwareMap)
+    private val mecanum by lazy {
+        MecanumDriveBase(hardwareMap)
     }
 
     private val spindexer by lazy {
-        Spindexer(hardwareMap)
+        Spindexer(hardwareMap) { octoquad.readSinglePosition_Caching(0) }
     }
 
 
@@ -44,16 +63,15 @@ class TeleOp: OpMode() {
     private var shootingNear = false
     private var flywheelActive = false
 
+    private var spindexerAuto = true
+
     private var spindexerIndex = 1
 
     private val timer = ElapsedTime()
 
     override fun init() {
-        //follower.setStartingPose(Pose())
-    }
-
-    override fun start() {
-        //follower.startTeleOpDrive()
+        indicatorChannelOne.mode = DigitalChannel.Mode.OUTPUT
+        indicatorChannelTwo.mode = DigitalChannel.Mode.OUTPUT
     }
 
     override fun loop() {
@@ -62,23 +80,26 @@ class TeleOp: OpMode() {
 
         // Drive
 
-//        val drive = run {
-//            val raw = gamepad1.left_stick_y.toDouble()
-//            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
-//        }
-//
-//        val strafe = run {
-//            val raw = -gamepad1.left_stick_x.toDouble()
-//            if (abs(raw) < 0.05) 0.0 else raw * abs(raw)
-//        }
-//
-//        val turn = run {
-//            val raw = -gamepad1.right_stick_x.toDouble()
-//            if (abs(raw) < 0.05) 0.0 else (raw * abs(raw)) * 0.9
-//        }
+        var drive = -gamepad1.left_stick_y.toDouble()
+        if (abs(drive) < 0.05) {
+            drive = 0.0
+        }
 
-//        follower.setTeleOpDrive(drive, strafe, turn)
-//        follower.update()
+        var strafe = gamepad1.left_stick_x.toDouble()
+        if (abs(strafe) < 0.05) {
+            strafe = 0.0
+        }
+
+        var turn = gamepad1.right_stick_x.toDouble()
+        if (abs(turn) < 0.05) {
+            turn = 0.0
+        }
+
+        telemetry.addLine("Drive: $drive")
+        telemetry.addLine("Strafe: $strafe")
+        telemetry.addLine("Turn: $turn")
+
+        mecanum.driveFieldCentric(drive, strafe, turn)
 
         // Shooter
 
@@ -89,9 +110,11 @@ class TeleOp: OpMode() {
         }
 
         if (shootingNear) {
-            telemetry.addLine("Near")
+            indicatorChannelOne.state = false
+            indicatorChannelTwo.state = true
         } else {
-            telemetry.addLine("Far")
+            indicatorChannelOne.state = true
+            indicatorChannelTwo.state = false
         }
 
         // Flywheel
@@ -100,15 +123,24 @@ class TeleOp: OpMode() {
             flywheelActive = !flywheelActive
         }
 
+        telemetry.addLine("Flywheel Active: $flywheelActive")
+        telemetry.addLine("Shooting Near: $shootingNear")
+
         if (flywheelActive) {
             if (shootingNear) {
-                flywheel.setPower(0.5)
+                flywheel.spinUp(2000.0)
             } else {
-                flywheel.setPower(1.0)
+                flywheel.spinUp(2200.0)
             }
         } else {
-            flywheel.setPower(0.0)
+            flywheel.powerFlywheel(0.0)
         }
+
+        flywheel.update()
+
+        telemetry.addLine("Mode: ${flywheel.mode}")
+
+        telemetry.addLine("RPM: ${flywheel.rpm}")
 
         // Transfer
 
@@ -138,29 +170,85 @@ class TeleOp: OpMode() {
         // Spindexer
 
         if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
-            spindexerIndex++
-            if (spindexerIndex > 3) {
-                spindexerIndex = 1
+            spindexerIndex -= if (spindexerIndex % 2 == 0) {
+                1
+            } else {
+                2
+            }
+
+            if (spindexerIndex < 1) {
+                spindexerIndex = if (spindexerIndex == -1) {
+                    5
+                } else {
+                    6
+                }
             }
         }
 
         if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
-            spindexerIndex--
-            if (spindexerIndex < 1) {
-                spindexerIndex = 3
+            spindexerIndex += if (spindexerIndex % 2 == 0) {
+                1
+            } else {
+                2
+            }
+            if (spindexerIndex > 6) {
+                spindexerIndex = if (spindexerIndex == 7) {
+                    1
+                } else {
+                    2
+                }
             }
         }
 
-        val spindexerPower = currentGamepad.right_stick_x.toDouble()
-
-        if (spindexerPower != 0.0) {
-            spindexer.setPower(spindexerPower)
-        } else {
-            when (spindexerIndex) {
-                1 -> spindexer.slotOne()
-                2 -> spindexer.slotTwo()
-                3 -> spindexer.slotThree()
+        if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
+            spindexerIndex += if (spindexerIndex % 2 == 0) {
+                2
+            } else {
+                1
             }
+
+            if (spindexerIndex > 6) {
+                spindexerIndex = if (spindexerIndex == 8) {
+                    2
+                } else {
+                    1
+                }
+            }
+        }
+
+        if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
+            spindexerIndex -= if (spindexerIndex % 2 == 0) {
+                2
+            } else {
+                1
+            }
+
+            if (spindexerIndex < 0) {
+                spindexerIndex = if (spindexerIndex == -2) {
+                    1
+                } else {
+                    2
+                }
+            }
+        }
+
+
+        val spindexerPower = -currentGamepad.right_stick_x.toDouble()
+        telemetry.addLine("Spindexer Power: $spindexerPower")
+
+        if (abs(spindexerPower) < 0.03) {
+            if (spindexerAuto) {
+                when (spindexerIndex) {
+                    1 -> spindexer.toOuttakeOne()
+                    2 -> spindexer.toIntakeOne()
+                    3 -> spindexer.toOuttakeTwo()
+                    4 -> spindexer.toIntakeTwo()
+                    5 -> spindexer.toOuttakeThree()
+                    6 -> spindexer.toIntakeThree()
+                }
+            }
+        } else {
+            spindexer.setPower(spindexerPower)
         }
 
         telemetry.addLine("Index: $spindexerIndex")

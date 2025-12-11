@@ -5,7 +5,14 @@ import org.firstinspires.ftc.teamcode.math.isReal
 import kotlin.math.abs
 
 class PIDController(val coefficients: PIDCoefficients) {
+
+    /**
+     * @throws IllegalArgumentException If any of kp, ki, or kd is one of: Nan, Infinity
+     */
+    @Throws(IllegalArgumentException::class)
     constructor(kp: Double, ki: Double, kd: Double): this(PIDCoefficients(kp, ki, kd))
+
+    constructor(kp: Int, ki: Int, kd: Int): this(kp.toDouble(), ki.toDouble(), kd.toDouble())
 
     // ----------
     // State
@@ -22,14 +29,16 @@ class PIDController(val coefficients: PIDCoefficients) {
     // ----------
     // Config
 
+    /**
+     * The maximum value of the integral. Useful for preventing integral windup
+     *
+     * @throws IllegalArgumentException If the integral max is set to NaN
+     */
     var integralMax = 0.25
         @Throws(IllegalArgumentException::class)
         set(max) {
             require(max.isReal()) {
                 "Expected real integral max. Got: $max"
-            }
-            require(max > 0.0) {
-                "Expected integral max > 0.0. Got: $max"
             }
 
             reset()
@@ -37,14 +46,16 @@ class PIDController(val coefficients: PIDCoefficients) {
             field = max
         }
 
+    /**
+     * The minimum value of the integral. Useful for preventing integral windup.
+     *
+     * @throws IllegalArgumentException If the integral min is set to NaN
+     */
     var integralMin = -0.25
         @Throws(IllegalArgumentException::class)
         set(min) {
             require(min.isReal()) {
                 "Expected real integral min. Got: $min"
-            }
-            require(min < 0.0) {
-                "Expected integral min < 0.0. Got: $min"
             }
 
             reset()
@@ -52,6 +63,12 @@ class PIDController(val coefficients: PIDCoefficients) {
             field = min
         }
 
+    /**
+     * The absolute value of the tolerance
+     *
+     * @throws IllegalArgumentException If the tolerance is NaN
+     * @throws IllegalArgumentException If the tolerance is less than 0.0
+     */
     var tolerance = 10.0
         @Throws(IllegalArgumentException::class)
         set(tolerance) {
@@ -67,6 +84,11 @@ class PIDController(val coefficients: PIDCoefficients) {
             field = tolerance
         }
 
+    /**
+     * The minimum output of the PID controller.
+     *
+     * @throws IllegalArgumentException If the value is set to NaN
+     */
     var minOutput = -1.0
         @Throws(IllegalArgumentException::class)
         set(min) {
@@ -76,6 +98,11 @@ class PIDController(val coefficients: PIDCoefficients) {
             field = min
         }
 
+    /**
+     * The maximum output of the PID controller.
+     *
+     * @throws IllegalArgumentException If the value is set to NaN
+     */
     var maxOutput = 1.0
         @Throws(IllegalArgumentException::class)
         set(max) {
@@ -99,6 +126,7 @@ class PIDController(val coefficients: PIDCoefficients) {
         require(state.isReal()) {
             "Expected real state. Got: $state"
         }
+
         require(reference.isReal()) {
             "Expected real reference. Got: $reference"
         }
@@ -111,8 +139,10 @@ class PIDController(val coefficients: PIDCoefficients) {
         val currentTime = timer.milliseconds()
         val deltaTime = currentTime - previousTime
 
-        var error = reference - state
-        if (abs(error) < tolerance) error = 0.0
+        val error = run {
+            val raw = reference - state
+            if (abs(raw) > tolerance) raw else 0.0
+        }
 
         val deltaError = error - previousError
 
@@ -135,6 +165,17 @@ class PIDController(val coefficients: PIDCoefficients) {
         previousReference = reference
 
         return (proportional + integral + derivative).coerceIn(minOutput, maxOutput)
+    }
+
+    /**
+     * Calculates the output power based on the current state (state) and the desired state
+     * (reference).
+     *
+     * @throws IllegalArgumentException if either state or reference are one of: Nan, Infinity
+     */
+    @Throws(IllegalArgumentException::class)
+    fun calculate(state: Int, reference: Int): Double {
+        return calculate(state.toDouble(), reference.toDouble())
     }
 
     /**

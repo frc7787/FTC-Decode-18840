@@ -4,10 +4,22 @@ import org.firstinspires.ftc.teamcode.math.isReal
 import kotlin.math.sign
 
 class FFController(val coefficients: FFCoefficients) {
+
+    /**
+     * @throws IllegalArgumentException If any of kv, ka, or ks is one of: NaN, Infinity
+     */
+    @Throws(IllegalArgumentException::class)
     constructor(kv: Double, ka: Double, ks: Double): this(FFCoefficients(kv, ka, ks))
+
+    constructor(kv: Int, ka: Int, ks: Int): this(kv.toDouble(), ka.toDouble(), ks.toDouble())
 
     // Configuration
 
+    /**
+     * The maximum output of the controller
+     *
+     * @throws IllegalArgumentException If the value of the max output is set to NaN
+     */
     var maxOutput: Double = 1.0
         @Throws(IllegalArgumentException::class)
         set(max) {
@@ -17,6 +29,11 @@ class FFController(val coefficients: FFCoefficients) {
             field = max
         }
 
+    /**
+     * The minimum output of the controller.
+     *
+     * @throws IllegalArgumentException If the value of min output is set to NaN
+     */
     var minOutput: Double = -1.0
         @Throws(IllegalArgumentException::class)
         set(min) {

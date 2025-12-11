@@ -16,14 +16,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .forwardZeroPowerAcceleration(-26.208)
-            .lateralZeroPowerAcceleration(-62.220)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.25, 0.0, 0.0, 0.03))
-            .headingPIDFCoefficients(new PIDFCoefficients(1.1, 0.0, 0.1, 0.0))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.004, 0.0, 0.0, 0.6, 0.0))
-            .mass(8.65);
+            .forwardZeroPowerAcceleration(-25.791)
+            .lateralZeroPowerAcceleration(-45.169)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0.0, 0.016, 0.0015))
+            .headingPIDFCoefficients(new PIDFCoefficients(1.1, 0.0, 0.1, 0.02))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.011, 0.0, 0.0, 0.6, 0.0))
+            .mass(7.0);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 0.7, 1.1);
+    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1.2, 1.0);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
@@ -34,13 +34,13 @@ public class Constants {
     }
 
     public static PinpointConstants pinpointConstants = new PinpointConstants()
-            .forwardPodY(6.5)
-            .strafePodX(-0.8)
+            .forwardPodY(2.346)
+            .strafePodX(6.299)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     public static MecanumConstants mecanumConstants = new MecanumConstants()
             .leftFrontMotorName("frontLeftDriveMotor")
@@ -51,7 +51,7 @@ public class Constants {
             .rightFrontMotorDirection(Direction.REVERSE)
             .leftRearMotorDirection(Direction.FORWARD)
             .rightRearMotorDirection(Direction.REVERSE)
-            .xVelocity(91.107)
-            .yVelocity(75.501)
+            .xVelocity(93.629)
+            .yVelocity(80.157)
             .useBrakeModeInTeleOp(true);
 }

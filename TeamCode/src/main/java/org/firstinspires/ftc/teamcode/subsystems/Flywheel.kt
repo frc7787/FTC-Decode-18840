@@ -17,23 +17,43 @@ internal class Flywheel(hardwareMap: HardwareMap) {
     private val leaderMotor   = hardwareMap[LEADER_MOTOR_NAME]   as DcMotorSimple
     private val followerMotor = hardwareMap[FOLLOWER_MOTOR_NAME] as DcMotorSimple
 
-    private val shooterEncoder = hardwareMap["frontLeftDriveMotor"] as DcMotor
+    private val shooterEncoder = hardwareMap["frontRightDriveMotor"] as DcMotorEx
 
     init {
         leaderMotor.direction   = LEADER_MOTOR_DIRECTION
         followerMotor.direction = FOLLOWER_MOTOR_DIRECTION
     }
 
+    private val feedforward = FFController(KV, KA, KS)
+    private val pid = PIDController(P, I, D)
+
+    var mode = Mode.POWER
+
     // State
 
-    fun setPower(power: Double) {
-        require(power.isReal()) {
-            "Expected real flywheel power. Got: $power"
+
+    var targetRPM: Double = 0.0
+
+    fun update() {
+        when (mode) {
+            Mode.POWER -> {
+                leaderMotor.power   = targetPower
+                followerMotor.power = targetPower
+            }
+
+            Mode.RPM -> {
+                val power = feedforward.calculate(targetRPM) + pid.calculate(rpm, targetRPM)
+                leaderMotor.power   = power
+                followerMotor.power = power
+            }
         }
-        power.coerceIn(0.0, MAX_POWER).also { power ->
-            leaderMotor.power   = power
-            followerMotor.power = power
-        }
+    }
+
+    var targetPower: Double = 0.0
+
+    fun powerFlywheel(power: Double) {
+        this.targetPower = power
+        mode = Mode.POWER
     }
 
     fun spinUp(targetRpm: Double) {
@@ -41,8 +61,21 @@ internal class Flywheel(hardwareMap: HardwareMap) {
             "Expected real target rpm. Got: $targetRpm"
         }
 
-        val targetDegreesPerSecond = targetRpm * 6.0
+        this.targetRPM = targetRpm
+        mode = Mode.RPM
     }
+
+    val rpm: Double
+        get() {
+            return shooterEncoder.velocity
+        }
+
+    val power: Double
+        get() {
+            return leaderMotor.power
+        }
+
+
 
     fun stop() {
         leaderMotor.power   = 0.0
@@ -65,16 +98,21 @@ internal class Flywheel(hardwareMap: HardwareMap) {
         val FOLLOWER_MOTOR_DIRECTION  = DcMotorSimple.Direction.REVERSE
         val MOTOR_ZERO_POWER_BEHAVIOR = DcMotor.ZeroPowerBehavior.FLOAT
 
-        const val P = 0.001
+        const val P = 0.0012
         const val I = 0.0
-        const val D = 0.0001
+        const val D = 0.00001
 
-        const val KV = 0.00005
+        const val KV = 0.00032
         const val KA = 0.0
         const val KS = 0.05
 
         const val MAX_RPM = 6200
 
         const val MAX_POWER = 1.0
+    }
+
+    enum class Mode {
+        POWER,
+        RPM
     }
 }

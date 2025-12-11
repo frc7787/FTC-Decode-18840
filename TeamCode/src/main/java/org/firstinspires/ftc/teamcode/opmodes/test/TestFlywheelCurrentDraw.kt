@@ -23,7 +23,7 @@ class TestFlywheelCurrentDraw: OpMode() {
 
     override fun start() {
         timer.reset()
-        flywheel.setPower(1.0)
+        flywheel.powerFlywheel(1.0)
     }
 
     override fun loop() {

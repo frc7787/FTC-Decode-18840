@@ -8,25 +8,18 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.control.PIDController
 import kotlin.math.abs
 
-class Spindexer(hardwareMap: HardwareMap) {
+class Spindexer(hardwareMap: HardwareMap, private val positionSupplier: () -> Int) {
     private val servo    = hardwareMap[SERVO_NAME] as CRServo
-    private val octoquad = hardwareMap["octoquad"] as OctoQuad
 
     init {
         servo.power     = 0.0
         servo.direction = SERVO_DIRECTION
-        octoquad.channelBankConfig = OctoQuad.ChannelBankConfig.ALL_PULSE_WIDTH
-        octoquad.saveParametersToFlash()
     }
 
-    fun getPosition(): Int {
-        return octoquad.readSinglePosition_Caching(0)
-    }
-
-    fun reset() {
-        octoquad.resetAllPositions()
-        octoquad.saveParametersToFlash()
-    }
+    val position: Int
+        get() {
+            return positionSupplier.invoke()
+        }
 
     fun spin() {
         setPower(NOMINAL_POWER)
@@ -53,38 +46,49 @@ class Spindexer(hardwareMap: HardwareMap) {
                 servo.power = targetPower
             }
             Mode.POSITION -> {
-                val position = getPosition()
-                var clippedPosition = targetPosition
-
-                if (abs(position - targetPosition) > 525) {
+                val targetPosition = if (abs(targetPosition - position) > 526) {
                     if (targetPosition > 525) {
-                       clippedPosition -= 1039
+                        targetPosition - 1039
                     } else {
-                        clippedPosition += 1039
+                        targetPosition + 1039
                     }
+                } else {
+                    targetPosition
                 }
 
-                servo.power = pid.calculate(clippedPosition.toDouble(), getPosition().toDouble())
+                servo.power = pid.calculate(targetPosition, position)
             }
-
         }
 
-        telemetry.addLine("Position: ${getPosition()}")
+        telemetry.addLine("Position: $position")
         telemetry.addLine("Target Position: $targetPosition")
         telemetry.addLine("Servo Power: ${servo.power}")
     }
 
-    fun slotOne() {
+    fun toOuttakeOne() {
         setTargetPosition(OUTTAKE_SLOT_ONE)
     }
 
-    fun slotTwo() {
+    fun toOuttakeTwo() {
         setTargetPosition(OUTTAKE_SLOT_TWO)
     }
 
-    fun slotThree() {
+    fun toOuttakeThree() {
         setTargetPosition(OUTTAKE_SLOT_THREE)
     }
+
+    fun toIntakeOne() {
+        setTargetPosition(INTAKE_SLOT_ONE)
+    }
+
+    fun toIntakeTwo() {
+        setTargetPosition(INTAKE_SLOT_TWO)
+    }
+
+    fun toIntakeThree() {
+        setTargetPosition(INTAKE_SLOT_THREE)
+    }
+
 
     private var pid = PIDController(0.005, 0.0, 0.00).also { pid ->
         pid.tolerance = 0.01
@@ -101,6 +105,10 @@ class Spindexer(hardwareMap: HardwareMap) {
         const val OUTTAKE_SLOT_ONE   = 821
         const val OUTTAKE_SLOT_TWO   = 116
         const val OUTTAKE_SLOT_THREE = 458
+
+        const val INTAKE_SLOT_ONE   = 980
+        const val INTAKE_SLOT_TWO   = 289
+        const val INTAKE_SLOT_THREE = 640
     }
 
     enum class Mode {
