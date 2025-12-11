@@ -90,13 +90,13 @@ class Spindexer(hardwareMap: HardwareMap, private val positionSupplier: () -> In
     }
 
 
-    private var pid = PIDController(0.005, 0.0, 0.00).also { pid ->
-        pid.tolerance = 0.01
+    private var pid = PIDController(0.006, 0.0, 0.00).also { pid ->
+        pid.tolerance = 3.0
     }
 
-    private companion object {
-        const val SERVO_NAME = "spindexerServo"
-        val SERVO_DIRECTION  = DcMotorSimple.Direction.FORWARD
+    companion object {
+        private const val SERVO_NAME = "spindexerServo"
+        private val SERVO_DIRECTION  = DcMotorSimple.Direction.FORWARD
 
         const val MIN_POWER = -1.0
         const val NOMINAL_POWER = 0.8
