@@ -2,25 +2,20 @@ package org.firstinspires.ftc.teamcode.opmodes.auto
 
 import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
-import com.pedropathing.paths.PathChain
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
-import org.firstinspires.ftc.teamcode.util.RedPositions.AUDIENCE_SPIKE_MARK_END
-import org.firstinspires.ftc.teamcode.util.RedPositions.AUDIENCE_SPIKE_MARK_START
-import org.firstinspires.ftc.teamcode.util.RedPositions.GATE_SPIKE_MARK_END
-import org.firstinspires.ftc.teamcode.util.RedPositions.GATE_SPIKE_MARK_START
 import kotlin.math.PI
 import kotlin.math.abs
 
 @Autonomous(group = "Red")
-class RedAudience: OpMode() {
+class RedGoal: OpMode() {
 
     private val octoquad by lazy {
         (hardwareMap["octoquad"] as OctoQuad).also { octoquad ->
@@ -33,50 +28,63 @@ class RedAudience: OpMode() {
         Constants.createFollower(hardwareMap)
     }
 
-    private val transfer by lazy {
-        Transfer(hardwareMap)
-    }
-
     private val spindexer by lazy {
         Spindexer(hardwareMap) {
             octoquad.readSinglePosition_Caching(0)
         }
     }
 
+    private val transfer by lazy {
+        Transfer(hardwareMap)
+    }
+
     private val flywheel by lazy {
         Flywheel(hardwareMap)
     }
 
-    private val shootToEnd  = {
+    private val startToShoot = {
         follower.pathBuilder()
             .addPath(
                 BezierLine(
-                    Pose(83.0, 11.0, 70.0), Pose(90.0, 32.0, 90.0)
+                    START, SHOOT
                 )
             )
-            .setLinearHeadingInterpolation(70.0, 90.0)
+            .setLinearHeadingInterpolation(START.heading, SHOOT.heading)
             .build()!!
     }
 
-    override fun init() {
-        follower.setStartingPose(Pose(83.0, 11.0, 70.0))
+    private val shootToEnd = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(
+                    SHOOT, END
+                )
+            )
+            .setLinearHeadingInterpolation(SHOOT.heading, END.heading)
+            .build()!!
     }
 
     private var state = State.START
 
-    private val timer = ElapsedTime()
+    override fun init() {
+        follower.setStartingPose(START)
+    }
 
     override fun loop() {
-        flywheel.spinUp(2200.0)
+        flywheel.spinUp(2000.0)
 
         when (state) {
             State.START -> {
-                if (!shootingDelayTimerHasBeenTriggered) {
+                follower.followPath(startToShoot.invoke())
+                state = State.TO_SHOOT_PRELOAD
+            }
+            State.TO_SHOOT_PRELOAD -> {
+                if (!follower.isBusy && !shootingDelayTimerHasBeenTriggered) {
                     shootingDelayTimer.reset()
                     shootingDelayTimerHasBeenTriggered = true
                 }
 
-                if (shootingDelayTimer.seconds() > 2.0) {
+                if (!follower.isBusy && shootingDelayTimer.seconds() > 2.5) {
                     state = State.SHOOTING_PRELOAD
                 }
             }
@@ -104,6 +112,8 @@ class RedAudience: OpMode() {
         flywheel.update()
         spindexer.update(telemetry)
     }
+
+    private val timer = ElapsedTime()
 
     private var isAtShootingPosition               = false
     private var hasShot                            = false
@@ -152,7 +162,7 @@ class RedAudience: OpMode() {
         }
 
         if (isAtShootingPosition) {
-            if (timer.seconds() > 2.5) {
+            if (timer.seconds() > 3.0) {
                 transfer.down()
                 shootingIndex += 2
                 timerHasBeenTriggered = false
@@ -165,15 +175,15 @@ class RedAudience: OpMode() {
 
     private enum class State {
         START,
+        TO_SHOOT_PRELOAD,
         SHOOTING_PRELOAD,
         TO_END,
         END;
     }
 
     private companion object {
-        const val SLEEP_MILLISECONDS = 1000
-        const val MAX_POWER = 0.6
-
-        val SHOOT = Pose(85.0, 21.0, Math.toRadians(70.0))
+        val START = Pose(126.0, 120.0, Math.toRadians(305.0))
+        val SHOOT = Pose(82.0, 76.0, Math.toRadians(45.0))
+        val END   = Pose(82.0, 101.0, PI / 2.0)
     }
 }

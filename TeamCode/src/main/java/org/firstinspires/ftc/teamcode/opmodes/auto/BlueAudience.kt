@@ -3,98 +3,166 @@ package org.firstinspires.ftc.teamcode.opmodes.auto
 import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
 import com.pedropathing.paths.PathChain
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
+import org.firstinspires.ftc.teamcode.subsystems.Flywheel
+import org.firstinspires.ftc.teamcode.subsystems.Spindexer
+import org.firstinspires.ftc.teamcode.subsystems.Transfer
 import org.firstinspires.ftc.teamcode.util.BluePositions.AUDIENCE_SPIKE_MARK_END
 import org.firstinspires.ftc.teamcode.util.BluePositions.AUDIENCE_SPIKE_MARK_START
 import org.firstinspires.ftc.teamcode.util.BluePositions.GATE_SPIKE_MARK_END
 import org.firstinspires.ftc.teamcode.util.BluePositions.GATE_SPIKE_MARK_START
 import kotlin.math.PI
+import kotlin.math.abs
 
 @Autonomous(group = "Blue")
-class BlueAudience: LinearOpMode() {
+class BlueAudience: OpMode() {
+
+    private val octoquad by lazy {
+        (hardwareMap["octoquad"] as OctoQuad).also { octoquad ->
+            octoquad.channelBankConfig = OctoQuad.ChannelBankConfig.ALL_PULSE_WIDTH
+            octoquad.saveParametersToFlash()
+        }
+    }
 
     private val follower by lazy {
         Constants.createFollower(hardwareMap)
     }
 
+    private val transfer by lazy {
+        Transfer(hardwareMap)
+    }
+
+    private val spindexer by lazy {
+        Spindexer(hardwareMap) {
+            octoquad.readSinglePosition_Caching(0)
+        }
+    }
+
+    private val flywheel by lazy {
+        Flywheel(hardwareMap)
+    }
+
+    private val startToEnd = {
+        follower.pathBuilder()
+            .addPath(
+                BezierLine(START, END)
+            )
+            .setLinearHeadingInterpolation(START.heading, END.heading)
+            .build()!!
+    }
+
     private val timer = ElapsedTime()
 
-    override fun runOpMode() {
+    private var state = State.SHOOTING_PRELOAD
+
+    override fun init() {
         follower.setStartingPose(START)
-        follower.setMaxPower(MAX_POWER)
-
-        val paths = listOf(
-            follower.pathBuilder()
-                .addPath(BezierLine(START, SHOOT))
-                .setLinearHeadingInterpolation(START.heading, SHOOT.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(SHOOT, AUDIENCE_SPIKE_MARK_START))
-                .setLinearHeadingInterpolation(SHOOT.heading, AUDIENCE_SPIKE_MARK_START.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(AUDIENCE_SPIKE_MARK_START, AUDIENCE_SPIKE_MARK_END))
-                .setLinearHeadingInterpolation(AUDIENCE_SPIKE_MARK_START.heading, AUDIENCE_SPIKE_MARK_END.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(AUDIENCE_SPIKE_MARK_END, SHOOT))
-                .setLinearHeadingInterpolation(AUDIENCE_SPIKE_MARK_END.heading, SHOOT.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(SHOOT, GATE_SPIKE_MARK_START))
-                .setLinearHeadingInterpolation(SHOOT.heading, GATE_SPIKE_MARK_START.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(GATE_SPIKE_MARK_START, GATE_SPIKE_MARK_END))
-                .setLinearHeadingInterpolation(GATE_SPIKE_MARK_START.heading, GATE_SPIKE_MARK_END.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(GATE_SPIKE_MARK_END, SHOOT))
-                .setLinearHeadingInterpolation(GATE_SPIKE_MARK_END.heading, SHOOT.heading)
-                .build(),
-            follower.pathBuilder()
-                .addPath(BezierLine(SHOOT, END))
-                .setLinearHeadingInterpolation(SHOOT.heading, END.heading)
-                .build()
-        )
-
-        waitForStart()
-
-        paths.forEach { path ->
-            followPath(path)
-            waitAndHold(path.endPose())
-        }
     }
 
-    private fun followPath(path: PathChain) {
-        follower.followPath(path)
+    override fun loop() {
+        flywheel.spinUp(2100.0)
+
+        when (state) {
+            State.SHOOTING_PRELOAD -> {
+                shoot(shootingIndex)
+
+                if (shootingIndex > 5) {
+                    shootingIndex = 0
+                    follower.followPath(startToEnd.invoke())
+                    state = State.TO_END
+                }
+            }
+            State.TO_END -> {
+                if (!follower.isBusy) {
+                    state = State.END
+                }
+            }
+            State.END -> {
+                telemetry.addLine("Finished!")
+            }
+        }
+
         follower.update()
 
-        while (opModeIsActive() && !isStopRequested && follower.isBusy) {
-            follower.update()
-        }
+        flywheel.update()
+        spindexer.update(telemetry)
     }
 
-    private fun waitAndHold(point: Pose) {
-        telemetry.update()
-        timer.reset()
+    private var isAtShootingPosition               = false
+    private var hasShot                            = false
+    private var timerHasBeenTriggered              = false
+    private var shootingDelayTimerHasBeenTriggered = false
 
-        follower.holdPoint(point)
-        while (timer.milliseconds() < SLEEP_MILLISECONDS && opModeIsActive() && !isStopRequested) {
-            follower.update()
+    private var shootingIndex = 1
+
+    private var shootingDelayTimer = ElapsedTime()
+
+    private fun shoot(spindexerIndex: Int) {
+        when (spindexerIndex) {
+            1 -> {
+                spindexer.toOuttakeOne()
+                if (abs(spindexer.position - Spindexer.OUTTAKE_SLOT_ONE) < 10) {
+                    isAtShootingPosition = true
+                    if (!timerHasBeenTriggered) {
+                        timerHasBeenTriggered = true
+                        timer.reset()
+                    }
+                }
+            }
+            3 -> {
+                spindexer.toOuttakeTwo()
+                if (abs(spindexer.position - Spindexer.OUTTAKE_SLOT_TWO) < 10) {
+                    isAtShootingPosition = true
+                    if (!timerHasBeenTriggered) {
+                        timerHasBeenTriggered = true
+                        timer.reset()
+                    }
+                }
+            }
+            5 -> {
+                spindexer.toOuttakeThree()
+                if (abs(spindexer.position - Spindexer.OUTTAKE_SLOT_THREE) < 10) {
+                    isAtShootingPosition = true
+                    if (!timerHasBeenTriggered) {
+                        timerHasBeenTriggered = true
+                        timer.reset()
+                    }
+                }
+            }
+            else -> {
+                telemetry.addLine("Invalid Index: $shootingIndex")
+            }
+        }
+
+        if (isAtShootingPosition) {
+            if (timer.seconds() > 2.5) {
+                transfer.down()
+                shootingIndex += 2
+                timerHasBeenTriggered = false
+                isAtShootingPosition  = false
+            } else {
+                transfer.up()
+            }
         }
     }
 
     private companion object {
-        val START = Pose(56.0, 10.0, PI / 2.0)
-        val SHOOT = Pose(61.0, 23.0, Math.toRadians(110.0))
+        val START = Pose(59.0, 11.0, Math.toRadians(110.0))
 
-        val END = Pose(50.0, 23.0, PI)
+        val END = Pose(59.0, 33.0, PI / 2.0)
 
         const val SLEEP_MILLISECONDS = 1000
-        const val MAX_POWER = 0.6
+        const val MAX_POWER = 1.0
+    }
+
+    private enum class State {
+        SHOOTING_PRELOAD,
+        TO_END,
+        END;
     }
 }

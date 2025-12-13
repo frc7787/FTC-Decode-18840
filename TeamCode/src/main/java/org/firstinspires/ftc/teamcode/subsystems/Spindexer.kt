@@ -89,7 +89,6 @@ class Spindexer(hardwareMap: HardwareMap, private val positionSupplier: () -> In
         setTargetPosition(INTAKE_SLOT_THREE)
     }
 
-
     private var pid = PIDController(0.006, 0.0, 0.00).also { pid ->
         pid.tolerance = 3.0
     }

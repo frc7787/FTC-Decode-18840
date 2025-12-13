@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.Gamepad
@@ -8,6 +9,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Spindexer
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
 
 @TeleOp(group = "Test")
+@Disabled
 class FlywheelRPMTesting: OpMode() {
 
     private val flywheel by lazy {

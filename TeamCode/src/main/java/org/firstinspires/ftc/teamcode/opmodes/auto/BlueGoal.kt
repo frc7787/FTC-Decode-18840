@@ -115,34 +115,59 @@ class BlueGoal: OpMode() {
         transfer.down()
     }
 
-    private var shootingIndex = 1
-    private var shouldShoot = true
-
     override fun loop() {
         flywheel.spinUp(2000.0)
 
-        shoot(shootingIndex)
+        when (state) {
+            State.START -> {
+                follower.followPath(startToShoot.invoke())
+                state = State.TO_SHOOT_PRELOAD
+            }
+            State.TO_SHOOT_PRELOAD -> {
+                if (!follower.isBusy && !shootingDelayTimerHasBeenTriggered) {
+                    shootingDelayTimer.reset()
+                    shootingDelayTimerHasBeenTriggered = true
+                }
 
-        telemetry.addLine("Should Shoot: $shouldShoot")
-        telemetry.addLine("Is At Shooting Position: $isAtShootingPosition")
-        telemetry.addLine("Has Shoot: $hasShot")
-        telemetry.addLine("Shooting Index: $shootingIndex")
+                if (!follower.isBusy && shootingDelayTimer.seconds() > 2.5) {
+                    state = State.SHOOTING_PRELOAD
+                }
+            }
+            State.SHOOTING_PRELOAD -> {
+                shoot(shootingIndex)
 
-        if (shootingIndex > 5) {
-            shouldShoot = false
+                if (shootingIndex > 5) {
+                    shootingIndex = 0
+                    follower.followPath(shootToEnd.invoke())
+                    state = State.TO_END
+                }
+            }
+            State.TO_END -> {
+                if (!follower.isBusy) {
+                    state = State.END
+                }
+            }
+            State.END -> {
+                telemetry.addLine("Finished!")
+            }
         }
+
+        follower.update()
 
         flywheel.update()
         spindexer.update(telemetry)
     }
 
-
     private val timer = ElapsedTime()
 
-    private var isAtShootingPosition = false
-    private var hasShot = false
+    private var isAtShootingPosition               = false
+    private var hasShot                            = false
+    private var timerHasBeenTriggered              = false
+    private var shootingDelayTimerHasBeenTriggered = false
 
-    private var timerHasBeenTriggered = false
+    private var shootingIndex = 1
+
+    private var shootingDelayTimer = ElapsedTime()
 
     private fun shoot(spindexerIndex: Int) {
         when (spindexerIndex) {
@@ -182,24 +207,22 @@ class BlueGoal: OpMode() {
         }
 
         if (isAtShootingPosition) {
-            if (timer.seconds() > 0.5) {
+            if (timer.seconds() > 2.5) {
                 transfer.down()
                 shootingIndex += 2
                 timerHasBeenTriggered = false
-                isAtShootingPosition = false
+                isAtShootingPosition  = false
             } else {
                 transfer.up()
             }
         }
-
-        telemetry.addLine("Seconds: ${timer.seconds()}")
     }
 
     private companion object {
         val START = Pose(19.0, 122.0, Math.toRadians(53.0))
-        val SHOOT = Pose(56.0, 99.0, Math.toRadians(143.0))
+        val SHOOT = Pose(62.0, 76.0, Math.toRadians(130.0))
 
-        val END = Pose(56.0, 105.0, PI)
+        val END = Pose(56.0, 110.0, PI)
 
         const val MAX_POWER = 0.6
     }
@@ -208,19 +231,7 @@ class BlueGoal: OpMode() {
         START,
         TO_SHOOT_PRELOAD,
         SHOOTING_PRELOAD,
-        TO_INTAKE_GOAL,
-        INTAKING_GOAL,
-        TO_SHOOT_PICKUP,
-        SHOOTING_PICKUP,
         TO_END,
         END;
-
-        fun next(): State {
-            return entries[min(entries.size - 1, ordinal + 1)]
-        }
-
-        fun previous(): State {
-            return entries[max(0, ordinal - 1)]
-        }
     }
 }

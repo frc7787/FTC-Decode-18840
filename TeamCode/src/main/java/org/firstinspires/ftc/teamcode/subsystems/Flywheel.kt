@@ -31,7 +31,6 @@ internal class Flywheel(hardwareMap: HardwareMap) {
 
     // State
 
-
     var targetRPM: Double = 0.0
 
     fun update() {

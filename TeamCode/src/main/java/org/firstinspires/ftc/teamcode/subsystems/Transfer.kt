@@ -40,7 +40,7 @@ class Transfer(hardwareMap: HardwareMap) {
 
     private companion object {
         const val UP_POSITION   = 0.25
-        const val DOWN_POSITION = 0.01
+        const val DOWN_POSITION = 0.03
         const val SERVO_NAME = "transferServo"
         const val POSITION_SENSOR_NAME = "transferPositionSensor"
 
