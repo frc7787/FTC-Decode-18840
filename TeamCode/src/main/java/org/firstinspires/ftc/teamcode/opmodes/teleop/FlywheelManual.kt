@@ -10,15 +10,16 @@ import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 class FlywheelManual: OpMode() {
 
     private val flywheel by lazy {
-        Flywheel(hardwareMap)
+        Flywheel(hardwareMap) {
+            0.0
+        }
     }
 
     override fun init() {
     }
 
     override fun loop() {
-        val power = gamepad1.left_stick_y
-        flywheel.powerFlywheel(power.toDouble())
-        telemetry.addLine("Power: $power")
+        flywheel.rawPower = gamepad1.left_stick_y.toDouble()
+        telemetry.addLine("${flywheel.rawPower}")
     }
 }

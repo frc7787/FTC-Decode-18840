@@ -12,7 +12,9 @@ import java.io.File
 class TestFlywheelCurrentDraw: OpMode() {
 
     private val flywheel by lazy {
-        Flywheel(hardwareMap)
+        Flywheel(hardwareMap) {
+            0.0
+        }
     }
 
     val data = mutableListOf<String>()
@@ -23,7 +25,8 @@ class TestFlywheelCurrentDraw: OpMode() {
 
     override fun start() {
         timer.reset()
-        flywheel.powerFlywheel(1.0)
+        flywheel.rawPower = 1.0
+        flywheel.update()
     }
 
     override fun loop() {

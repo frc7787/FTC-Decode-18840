@@ -1,117 +1,183 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
-import com.qualcomm.hardware.bosch.BNO055IMU
-import com.qualcomm.robotcore.hardware.CRServo
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.firstinspires.ftc.teamcode.control.FFCoefficients
 import org.firstinspires.ftc.teamcode.control.FFController
+import org.firstinspires.ftc.teamcode.control.PIDCoefficients
 import org.firstinspires.ftc.teamcode.control.PIDController
 import org.firstinspires.ftc.teamcode.math.isReal
+import org.firstinspires.ftc.teamcode.util.NotNaN
+import org.firstinspires.ftc.teamcode.util.warnIf
 
-internal class Flywheel(hardwareMap: HardwareMap) {
+class Flywheel(
+    hardwareMap: HardwareMap,
+    private val configuration: Configuration = Configuration.DEFAULT,
+    private val rpmSupplier: () -> Double,
+): Subsystem {
     private val leaderMotor   = hardwareMap[LEADER_MOTOR_NAME]   as DcMotorSimple
     private val followerMotor = hardwareMap[FOLLOWER_MOTOR_NAME] as DcMotorSimple
 
-    private val shooterEncoder = hardwareMap["frontRightDriveMotor"] as DcMotorEx
+
+    private val ff  = FFController(configuration.ffCoefficients)
+    private val pid = PIDController(configuration.pidCoefficients)
 
     init {
-        leaderMotor.direction   = LEADER_MOTOR_DIRECTION
-        followerMotor.direction = FOLLOWER_MOTOR_DIRECTION
-    }
-
-    private val feedforward = FFController(KV, KA, KS)
-    private val pid = PIDController(P, I, D)
-
-    var mode = Mode.POWER
-
-    // State
-
-    var targetRPM: Double = 0.0
-
-    fun update() {
-        when (mode) {
-            Mode.POWER -> {
-                leaderMotor.power   = targetPower
-                followerMotor.power = targetPower
-            }
-
-            Mode.RPM -> {
-                val power = feedforward.calculate(targetRPM) + pid.calculate(rpm, targetRPM)
-                leaderMotor.power   = power
-                followerMotor.power = power
-            }
-        }
-    }
-
-    var targetPower: Double = 0.0
-
-    fun powerFlywheel(power: Double) {
-        this.targetPower = power
-        mode = Mode.POWER
-    }
-
-    fun spinUp(targetRpm: Double) {
-        require(targetRpm.isReal()) {
-            "Expected real target rpm. Got: $targetRpm"
-        }
-
-        this.targetRPM = targetRpm
-        mode = Mode.RPM
+        leaderMotor.direction   = configuration.leaderMotorDirection
+        followerMotor.direction = configuration.followerMotorDirection
     }
 
     val rpm: Double
         get() {
-            return shooterEncoder.velocity
+            return rpmSupplier()
         }
 
-    val power: Double
+    val motorPower: Double
         get() {
             return leaderMotor.power
         }
 
+    // State
 
+    var state: State = STOPPED
+        private set
 
-    fun stop() {
-        leaderMotor.power   = 0.0
-        followerMotor.power = 0.0
+    /**
+     * @throws IllegalArgumentException If the value of target RPM is set to NaN or Infinity
+     */
+    var targetRPM: Double = 0.0
+        @Throws(IllegalStateException::class)
+        get() {
+            check(state == VELOCITY) { "Cannot Obtain Target RPM Unless 'mode' is set to RPM"}
+            return field
+        }
+        @Throws(IllegalArgumentException::class)
+        set(target) {
+            require(target.isReal()) {
+                "Expected Real Target RPM. Got: $target"
+            }
+            warnIf(target > 6000.0) {
+                "Attempting To Set Flywheel RPM to $target. This is above motor free speed."
+            }
+
+            state = when (target) {
+                0.0  -> STOPPED
+                else -> VELOCITY
+            }
+            field = target
+        }
+
+    var rawPower: Double = 0.0
+        @Throws(IllegalStateException::class)
+        get() {
+            check(state == RAW) { "Cannot obtain raw power unless the state is RAW. To get the power of the motor use 'motorPower'" }
+            return field
+        }
+        @Throws(IllegalArgumentException::class)
+        set(target) {
+            require(target.isReal()) {
+                "Expected Real Target Power. Got: $target"
+            }
+
+            state = when (target) {
+                0.0  -> STOPPED
+                else -> RAW
+            }
+
+            field = target.coerceIn(-configuration.maxPower, configuration.maxPower)
+        }
+
+    // State
+
+    var ffOutput  = 0.0
+    var pidOutput = 0.0
+
+    override fun update() {
+        val power = when (state) {
+            RAW      -> rawPower
+            VELOCITY -> {
+                ffOutput  = ff.calculate(targetRPM)
+                pidOutput = pid.calculate(rpm, targetRPM)
+                ffOutput + pidOutput
+            }
+            STOPPED  -> 0.0
+        }
+
+        leaderMotor.power   = power
+        followerMotor.power = power
     }
 
-    fun debug(telemetry: Telemetry, verbose: Boolean = false) {
+    fun stop() {
+        state = STOPPED
+    }
+
+    override fun debug(telemetry: Telemetry, verbose: Boolean) {
         telemetry.addLine("---- Flywheel ----")
-        telemetry.addLine("Power: ${leaderMotor.power}")
+        telemetry.addLine("State: $state")
+        when (state) {
+            STOPPED -> {}
+            RAW     -> {
+                telemetry.addLine("Raw Power: $rawPower")
+            }
+            VELOCITY -> {
+                telemetry.addLine("Current Power: $motorPower")
+                telemetry.addLine("Current RPM: $rpm")
+                telemetry.addLine("Target RPM: $targetRPM")
+                telemetry.addLine("FF Output: $ffOutput")
+                telemetry.addLine("PID Output: $pidOutput")
+            }
+        }
+
         if (verbose) {
             telemetry.addLine("Direction: ${leaderMotor.direction}")
+        }
+    }
+
+    class Configuration(val pidCoefficients: PIDCoefficients, val ffCoefficients: FFCoefficients, val leaderMotorDirection: DcMotorSimple.Direction, val followerMotorDirection: DcMotorSimple.Direction, maxPower: Double) {
+        val maxPower by NotNaN(maxPower)
+
+        init {
+            require(maxPower.isReal()) {
+                "Expected Real Max Power. Got: $maxPower"
+            }
+        }
+
+        fun with(
+            pidCoefficients: PIDCoefficients                = DEFAULT.pidCoefficients,
+            ffCoefficients: FFCoefficients                  = DEFAULT.ffCoefficients,
+            leaderMotorDirection: DcMotorSimple.Direction   = DEFAULT.leaderMotorDirection,
+            followerMotorDirection: DcMotorSimple.Direction = DEFAULT.followerMotorDirection,
+            maxPower: Double                                = DEFAULT.maxPower
+        ): Configuration {
+            return Configuration(
+                pidCoefficients,
+                ffCoefficients,
+                leaderMotorDirection,
+                followerMotorDirection,
+                maxPower
+            )
+        }
+
+        companion object {
+            val DEFAULT = Configuration(
+                pidCoefficients        = PIDCoefficients(2.7e-3, 0.0, 0.0),
+                ffCoefficients         = FFCoefficients(1.6e-4, 0.0, 5.0e-2),
+                leaderMotorDirection   = FORWARD,
+                followerMotorDirection = REVERSE,
+                maxPower               = 1.0
+            )
         }
     }
 
     private companion object {
         const val LEADER_MOTOR_NAME   = "leaderFlywheelMotor"
         const val FOLLOWER_MOTOR_NAME = "followerFlywheelMotor"
-
-        val LEADER_MOTOR_DIRECTION    = DcMotorSimple.Direction.FORWARD
-        val FOLLOWER_MOTOR_DIRECTION  = DcMotorSimple.Direction.REVERSE
-        val MOTOR_ZERO_POWER_BEHAVIOR = DcMotor.ZeroPowerBehavior.FLOAT
-
-        const val P = 0.0012
-        const val I = 0.0
-        const val D = 0.00001
-
-        const val KV = 0.00032
-        const val KA = 0.0
-        const val KS = 0.05
-
-        const val MAX_RPM = 6200
-
-        const val MAX_POWER = 1.0
     }
 
-    enum class Mode {
-        POWER,
-        RPM
+    enum class State {
+        RAW,
+        VELOCITY,
+        STOPPED
     }
 }

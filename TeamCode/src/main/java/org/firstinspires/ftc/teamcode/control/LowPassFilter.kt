@@ -37,6 +37,7 @@ class LowPassFilter(val alpha: Double) {
      *
      * @throws IllegalArgumentException If data is one of: NaN, Infinity
      */
+    @Throws(IllegalArgumentException::class)
     fun update(data: Double) {
         require(data.isReal()) {
             "Expected real data. Got: $data"
@@ -57,6 +58,7 @@ class LowPassFilter(val alpha: Double) {
      *
      * @throws IllegalArgumentException If initialState if one of: NaN, Infinity
      */
+    @Throws(IllegalArgumentException::class)
     fun reset(initialState: Double) {
         require(initialState.isReal()) {
             "Expected real initial state. Got: $state"

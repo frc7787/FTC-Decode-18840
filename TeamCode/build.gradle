@@ -21,6 +21,10 @@ android {
 
     kotlinOptions {
         jvmTarget = 1.8
+
+        compileOptions {
+            freeCompilerArgs += "-Xcontext-sensitive-resolution"
+        }
     }
 
     compileSdk 35

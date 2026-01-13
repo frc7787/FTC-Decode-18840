@@ -7,7 +7,6 @@ data class FFCoefficients(val kv: Double, val ka: Double, val ks: Double) {
         require(kv.isReal()) {
             "Expected real kv. Got: $kv"
         }
-
         require(kv >= 0.0) {
             "Expected non-zero positive kv. Got: $kv"
         }

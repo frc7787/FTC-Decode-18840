@@ -95,6 +95,9 @@ class PIDController(val coefficients: PIDCoefficients) {
             require(min.isReal()) {
                 "Expected real min output. Got: $min"
             }
+            require(min < maxOutput) {
+                "Min output must be greater than max output"
+            }
             field = min
         }
 
@@ -108,6 +111,9 @@ class PIDController(val coefficients: PIDCoefficients) {
         set(max) {
             require(max.isReal()) {
                 "Expected real max output. Got: $max"
+            }
+            require(max > minOutput) {
+                "Max output must be greater than min output"
             }
             field = max
         }

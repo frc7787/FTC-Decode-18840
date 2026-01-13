@@ -13,12 +13,10 @@ class FFController(val coefficients: FFCoefficients) {
 
     constructor(kv: Int, ka: Int, ks: Int): this(kv.toDouble(), ka.toDouble(), ks.toDouble())
 
-    // Configuration
-
     /**
      * The maximum output of the controller
      *
-     * @throws IllegalArgumentException If the value of the max output is set to NaN
+     * @throws IllegalArgumentException If the value of the max output is set to one of: NaN, Infinity
      */
     var maxOutput: Double = 1.0
         @Throws(IllegalArgumentException::class)
@@ -32,7 +30,7 @@ class FFController(val coefficients: FFCoefficients) {
     /**
      * The minimum output of the controller.
      *
-     * @throws IllegalArgumentException If the value of min output is set to NaN
+     * @throws IllegalArgumentException If the value of min output is set to one of: NaN, Infinity
      */
     var minOutput: Double = -1.0
         @Throws(IllegalArgumentException::class)
@@ -63,6 +61,13 @@ class FFController(val coefficients: FFCoefficients) {
     }
 
     /**
+     * Calculates the feedforward power for the input target velocity and acceleration
+      */
+    fun calculate(velocity: Int, acceleration: Int): Double {
+        return calculate(velocity.toDouble(), acceleration.toDouble())
+    }
+
+    /**
      * Calculates the feedforward power for the input target velocity, the acceleration is set to 0.0
      *
      * @throws IllegalArgumentException if velocity is one of: Nan, Infinite
@@ -70,5 +75,12 @@ class FFController(val coefficients: FFCoefficients) {
     @Throws(IllegalArgumentException::class)
     fun calculate(velocity: Double): Double {
         return calculate(velocity, 0.0)
+    }
+
+    /**
+     * Calculates the feedforward power for the input target velocity, the acceleration is set to 0
+     */
+    fun calculate(velocity: Int): Double {
+        return calculate(velocity, 0)
     }
 }

@@ -5,7 +5,8 @@ import org.firstinspires.ftc.teamcode.math.isReal
 class KalmanFilter(val parameters: KalmanFilterParameters) {
 
     /**
-     * @throws IllegalArgumentException If either modelCovariance or dataCovariance is one of: NaN, Infinity
+     * @throws IllegalArgumentException If modelCovariance is NaN or Infinity
+     * @throws IllegalArgumentException If dataCovariance is NaN or Infinity
      */
     @Throws(IllegalArgumentException::class)
     constructor(modelCovariance: Double, dataCovariance: Double): this(KalmanFilterParameters(modelCovariance, dataCovariance))
@@ -25,7 +26,11 @@ class KalmanFilter(val parameters: KalmanFilterParameters) {
      *
      * @param data The current measurement
      * @param projection The projected measurement
+     *
+     * @throws IllegalArgumentException If data is NaN or Infinity
+     * @throws IllegalArgumentException If projection is NaN or Infinity
      */
+    @Throws(IllegalArgumentException::class)
     fun update(data: Double, projection: Double) {
         require(data.isReal()) {
             "Expected real data. Got: $data"
@@ -38,10 +43,20 @@ class KalmanFilter(val parameters: KalmanFilterParameters) {
         variance   = previousVariance + parameters.modelCovariance
         kalmanGain = variance / (variance + parameters.dataCovariance)
 
-        state += kalmanGain * (projection - state)
+        state    += kalmanGain * (projection - state)
         variance *= (1.0 - kalmanGain)
 
         previousState    = state
         previousVariance = variance
+    }
+
+    /**
+     * Updates the state of the kalman filter
+     *
+     * @param data The current measurement
+     * @projection The projected measurement
+     */
+    fun update(data: Int, projection: Int) {
+        update(data.toDouble(), projection.toDouble())
     }
 }
