@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.teamcode.math.isReal
 import kotlin.math.abs
 
-class PIDController(val coefficients: PIDCoefficients) {
+class PIDController(var coefficients: PIDCoefficients) {
 
     /**
      * @throws IllegalArgumentException If any of kp, ki, or kd is one of: Nan, Infinity

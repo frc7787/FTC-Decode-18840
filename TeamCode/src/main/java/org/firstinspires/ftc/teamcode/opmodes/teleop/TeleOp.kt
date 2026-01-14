@@ -22,7 +22,7 @@ class TeleOp: OpMode() {
     private val flywheel by lazy {
         Flywheel(hardwareMap) {
             val motor = hardwareMap["frontRightDriveMotor"] as DcMotorEx
-            motor.currentPosition.toDouble() / 28.0 * 60.0 // Conversion from ticks/s to rpm
+            motor.velocity / 28.0 * 60.0 // Conversion from ticks/s to rpm
         }
     }
 
@@ -57,11 +57,6 @@ class TeleOp: OpMode() {
     private val timer = ElapsedTime()
 
     private var index = 1
-
-    private var targetRPM = 2000.0
-        set(value) {
-            field = value.coerceIn(0.0, 6000.0)
-        }
 
     private var spindexerMovingToFreeSlot = false
 
@@ -105,16 +100,8 @@ class TeleOp: OpMode() {
             flywheelActive = !flywheelActive
         }
 
-        if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
-            targetRPM += 50.0
-        }
 
-        if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
-            targetRPM -= 50.0
-        }
-
-        flywheel.targetRPM = if (flywheelActive) targetRPM else 0.0
-
+        flywheel.targetRPM = if (flywheelActive) 3500.0 else 0.0
         flywheel.update()
 
         // Transfer
@@ -134,13 +121,14 @@ class TeleOp: OpMode() {
         if (intake.isActive()) {
             if (spindexer.artifactInIntakeSlot && !spindexerMovingToFreeSlot) {
                 spindexerMovingToFreeSlot = true
+
                 index = (index + 1).mod(3) // TODO Once we keep track of the balls, we can optimize the position
             }
         } else { // We only allow manual control if the intake isn't active. Otherwise, it introduces too many edge cases
-            if (currentGamepad.dpad_up && !previousGamepad.dpad_up) {
+            if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
                 index = (index + 1).mod(3)
             }
-            if (currentGamepad.dpad_down && !previousGamepad.dpad_down) {
+            if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
                 index = (index - 1).mod(3)
             }
         }

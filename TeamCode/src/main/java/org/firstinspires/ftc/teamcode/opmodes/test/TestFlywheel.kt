@@ -1,12 +1,16 @@
 package org.firstinspires.ftc.teamcode.opmodes.test
 
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.Gamepad
+import org.firstinspires.ftc.teamcode.control.FFCoefficients
+import org.firstinspires.ftc.teamcode.control.PIDCoefficients
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 
 @TeleOp(group = "Test")
+@Configurable
 class TestFlywheel: OpMode() {
 
     private val flywheel by lazy {
@@ -24,9 +28,19 @@ class TestFlywheel: OpMode() {
     private val currentGamepad  = Gamepad()
     private val previousGamepad = Gamepad()
 
+    companion object {
+        @JvmField
+        var pidCoefficients = PIDCoefficients(0.0, 0.0, 0.0)
+        @JvmField
+        var ffCoefficients  = FFCoefficients(0.0, 0.0, 0.0)
+    }
+
     override fun init() {}
 
     override fun loop() {
+        flywheel.pidCoefficients = pidCoefficients
+        flywheel.ffCoefficients  = ffCoefficients
+
         previousGamepad.copy(currentGamepad)
         currentGamepad.copy(gamepad1)
 

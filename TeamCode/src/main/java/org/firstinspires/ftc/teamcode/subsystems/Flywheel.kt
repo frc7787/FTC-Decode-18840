@@ -26,6 +26,7 @@ class Flywheel(
     init {
         leaderMotor.direction   = configuration.leaderMotorDirection
         followerMotor.direction = configuration.followerMotorDirection
+        pid.tolerance = configuration.tolerance
     }
 
     val rpm: Double
@@ -36,6 +37,18 @@ class Flywheel(
     val motorPower: Double
         get() {
             return leaderMotor.power
+        }
+
+    var pidCoefficients: PIDCoefficients = PIDCoefficients(0.0, 0.0, 0.0)
+        set(value) {
+            pid.coefficients = value
+            field = value
+        }
+
+    var ffCoefficients: FFCoefficients = FFCoefficients(0.0, 0.0, 0.0)
+        set(value) {
+            ff.coefficients = value
+            field = value
         }
 
     // State
@@ -134,7 +147,7 @@ class Flywheel(
         }
     }
 
-    class Configuration(val pidCoefficients: PIDCoefficients, val ffCoefficients: FFCoefficients, val leaderMotorDirection: DcMotorSimple.Direction, val followerMotorDirection: DcMotorSimple.Direction, maxPower: Double) {
+    class Configuration(val pidCoefficients: PIDCoefficients, val ffCoefficients: FFCoefficients, val leaderMotorDirection: DcMotorSimple.Direction, val followerMotorDirection: DcMotorSimple.Direction, maxPower: Double, val tolerance: Double) {
         val maxPower by NotNaN(maxPower)
 
         init {
@@ -148,24 +161,29 @@ class Flywheel(
             ffCoefficients: FFCoefficients                  = DEFAULT.ffCoefficients,
             leaderMotorDirection: DcMotorSimple.Direction   = DEFAULT.leaderMotorDirection,
             followerMotorDirection: DcMotorSimple.Direction = DEFAULT.followerMotorDirection,
-            maxPower: Double                                = DEFAULT.maxPower
+            maxPower: Double                                = DEFAULT.maxPower,
+            tolerance: Double                               = DEFAULT.tolerance
         ): Configuration {
             return Configuration(
                 pidCoefficients,
                 ffCoefficients,
                 leaderMotorDirection,
                 followerMotorDirection,
-                maxPower
+                maxPower,
+                tolerance
             )
         }
 
+
+
         companion object {
             val DEFAULT = Configuration(
-                pidCoefficients        = PIDCoefficients(2.7e-3, 0.0, 0.0),
-                ffCoefficients         = FFCoefficients(1.6e-4, 0.0, 5.0e-2),
+                pidCoefficients        = PIDCoefficients(0.0, 0.0, 0.0),
+                ffCoefficients         = FFCoefficients(1.48e-4, 0.0, 0.0),
                 leaderMotorDirection   = FORWARD,
                 followerMotorDirection = REVERSE,
-                maxPower               = 1.0
+                maxPower               = 1.0,
+                tolerance              = 100.0,
             )
         }
     }

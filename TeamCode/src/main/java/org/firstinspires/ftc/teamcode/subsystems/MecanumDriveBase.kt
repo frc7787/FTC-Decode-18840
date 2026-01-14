@@ -13,10 +13,15 @@ class MecanumDriveBase(hardwareMap: HardwareMap) {
     private val backRightMotor  = hardwareMap[BACK_RIGHT_MOTOR_NAME]  as DcMotorEx
 
     init {
-        frontLeftMotor.zeroPowerBehavior  = ZeroPowerBehavior.BRAKE
-        frontRightMotor.zeroPowerBehavior = ZeroPowerBehavior.BRAKE
-        backLeftMotor.zeroPowerBehavior   = ZeroPowerBehavior.BRAKE
-        backRightMotor.zeroPowerBehavior  = ZeroPowerBehavior.BRAKE
+        frontLeftMotor.zeroPowerBehavior  = BRAKE
+        frontRightMotor.zeroPowerBehavior = BRAKE
+        backLeftMotor.zeroPowerBehavior   = BRAKE
+        backRightMotor.zeroPowerBehavior  = BRAKE
+
+        frontLeftMotor.direction  = FRONT_LEFT_MOTOR_DIRECTION
+        frontRightMotor.direction = FRONT_RIGHT_MOTOR_DIRECTION
+        backLeftMotor.direction   = BACK_LEFT_MOTOR_DIRECTION
+        backRightMotor.direction  = BACK_RIGHT_MOTOR_DIRECTION
     }
 
     var frontLeftPower: Double = 0.0
@@ -56,10 +61,10 @@ class MecanumDriveBase(hardwareMap: HardwareMap) {
     }
 
     fun update() {
-        frontLeftMotor.power  = frontLeftPower.coerceIn(-0.9, 0.9)
-        frontRightMotor.power = frontRightPower.coerceIn(-0.9, 0.9)
-        backLeftMotor.power   = backLeftPower.coerceIn(-0.9, 0.9)
-        backRightMotor.power  = backRightPower.coerceIn(-0.9, 0.9)
+        frontLeftMotor.power  = frontLeftPower
+        frontRightMotor.power = frontRightPower
+        backLeftMotor.power   = backLeftPower
+        backRightMotor.power  = backRightPower
     }
 
     companion object {
@@ -70,14 +75,14 @@ class MecanumDriveBase(hardwareMap: HardwareMap) {
         private const val BACK_LEFT_MOTOR_NAME = "backLeftDriveMotor"
         private const val BACK_RIGHT_MOTOR_NAME = "backRightDriveMotor"
 
-        private val FRONT_LEFT_MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
-        private val FRONT_RIGHT_MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
-        private val BACK_LEFT_MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
-        private val BACK_RIGHT_MOTOR_ZERO_POWER_BEHAVIOR = ZeroPowerBehavior.BRAKE
+        private val FRONT_LEFT_MOTOR_ZERO_POWER_BEHAVIOR: ZeroPowerBehavior = BRAKE
+        private val FRONT_RIGHT_MOTOR_ZERO_POWER_BEHAVIOR: ZeroPowerBehavior = BRAKE
+        private val BACK_LEFT_MOTOR_ZERO_POWER_BEHAVIOR: ZeroPowerBehavior = BRAKE
+        private val BACK_RIGHT_MOTOR_ZERO_POWER_BEHAVIOR: ZeroPowerBehavior = BRAKE
 
-        private val FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD
-        private val FRONT_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE
-        private val BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD
-        private val BACK_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE
+        private val FRONT_LEFT_MOTOR_DIRECTION: DcMotorSimple.Direction  = FORWARD
+        private val FRONT_RIGHT_MOTOR_DIRECTION: DcMotorSimple.Direction = REVERSE
+        private val BACK_LEFT_MOTOR_DIRECTION: DcMotorSimple.Direction   = FORWARD
+        private val BACK_RIGHT_MOTOR_DIRECTION: DcMotorSimple.Direction  = REVERSE
     }
 }

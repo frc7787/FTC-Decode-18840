@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.control
 import org.firstinspires.ftc.teamcode.math.isReal
 import kotlin.math.sign
 
-class FFController(val coefficients: FFCoefficients) {
+class FFController(var coefficients: FFCoefficients) {
 
     /**
      * @throws IllegalArgumentException If any of kv, ka, or ks is one of: NaN, Infinity
