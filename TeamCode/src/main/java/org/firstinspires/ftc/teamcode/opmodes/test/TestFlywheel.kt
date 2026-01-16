@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import org.firstinspires.ftc.teamcode.control.FFCoefficients
 import org.firstinspires.ftc.teamcode.control.PIDCoefficients
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
+import org.firstinspires.ftc.teamcode.subsystems.Transfer
 
 @TeleOp(group = "Test")
 @Configurable
@@ -20,6 +21,10 @@ class TestFlywheel: OpMode() {
         }
     }
 
+    private val transfer by lazy {
+        Transfer(hardwareMap)
+    }
+
     private var targetRPM: Double = 2000.0
         set(target) {
             field = target.coerceIn(-6000.0, 6000.0)
@@ -30,16 +35,17 @@ class TestFlywheel: OpMode() {
 
     companion object {
         @JvmField
-        var pidCoefficients = PIDCoefficients(0.0, 0.0, 0.0)
+        var ffCoefficients: FFCoefficients = FFCoefficients(0.0, 0.0, 0.0)
+
         @JvmField
-        var ffCoefficients  = FFCoefficients(0.0, 0.0, 0.0)
+        var pidCoefficients: PIDCoefficients = PIDCoefficients(0.0, 0.0, 0.0)
     }
 
     override fun init() {}
 
     override fun loop() {
+        flywheel.ffCoefficients = ffCoefficients
         flywheel.pidCoefficients = pidCoefficients
-        flywheel.ffCoefficients  = ffCoefficients
 
         previousGamepad.copy(currentGamepad)
         currentGamepad.copy(gamepad1)
@@ -53,6 +59,13 @@ class TestFlywheel: OpMode() {
         }
 
         flywheel.targetRPM = targetRPM
+
+        if (currentGamepad.triangle) transfer.up() else transfer.down()
+        transfer.update()
+
+        telemetry.addLine("Dpad Up To Increment")
+        telemetry.addLine("Dpad Down To Decrement")
+        telemetry.addLine()
 
         flywheel.debug(telemetry, verbose = true)
         flywheel.update()

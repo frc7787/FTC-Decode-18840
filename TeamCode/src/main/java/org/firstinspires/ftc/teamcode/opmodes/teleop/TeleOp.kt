@@ -102,6 +102,7 @@ class TeleOp: OpMode() {
 
 
         flywheel.targetRPM = if (flywheelActive) 3500.0 else 0.0
+        flywheel.debug(telemetry, verbose = false)
         flywheel.update()
 
         // Transfer
@@ -127,9 +128,6 @@ class TeleOp: OpMode() {
         } else { // We only allow manual control if the intake isn't active. Otherwise, it introduces too many edge cases
             if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
                 index = (index + 1).mod(3)
-            }
-            if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
-                index = (index - 1).mod(3)
             }
         }
 
