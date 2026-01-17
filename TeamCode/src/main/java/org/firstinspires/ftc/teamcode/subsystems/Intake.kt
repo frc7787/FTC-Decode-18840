@@ -35,9 +35,11 @@ class Intake(
     }
 
     override fun update() {
-        motor.power = when (mode) {
-            STOPPED -> 0.0
-            ACTIVE  -> power
+        motor.power = power
+
+        mode = when (power) {
+            0.0 -> STOPPED
+            else -> ACTIVE
         }
     }
 

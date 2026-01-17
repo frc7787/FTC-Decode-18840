@@ -10,9 +10,9 @@ class BangBangController(val power: Double) {
         require(power.isReal()) {
             "Expected real power. Got: $power"
         }
-        warnIf(power < 0.0) {
-            "Negative Power May Result In Divergent Error"
-        }
+//        warnIf(power < 0.0) {
+//            "Negative Power May Result In Divergent Error"
+//        }
     }
 
     fun calculate(state: Double, target: Double): Double {

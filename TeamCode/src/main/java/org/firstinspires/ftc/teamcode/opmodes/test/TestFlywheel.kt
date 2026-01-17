@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Transfer
 class TestFlywheel: OpMode() {
 
     private val flywheel by lazy {
-        Flywheel(hardwareMap) {
+        Flywheel(hardwareMap, telemetry) {
             val motor = hardwareMap["frontRightDriveMotor"] as DcMotorEx
             -(motor.velocity / 28.0 * 60.0) // Conversion from ticks/s to rpm
         }

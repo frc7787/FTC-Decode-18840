@@ -165,6 +165,10 @@ class Spindexer(
         }
     }
 
+    fun reset() {
+        resetFunction.invoke()
+    }
+
     fun debug(telemetry: Telemetry) {
         telemetry.addLine("----- Spindexer -----")
         telemetry.addLine("Position: $position")
@@ -243,8 +247,8 @@ class Spindexer(
                     direction = REVERSE,
                     zeroPowerBehavior = BRAKE,
                     homingPower = 0.4,
-                    minPower = -0.7,
-                    maxPower = 0.7,
+                    minPower = -0.5,
+                    maxPower = 0.5,
                     tolerance = 1.0,
                     p = 0.03,
                     i = 0.0,

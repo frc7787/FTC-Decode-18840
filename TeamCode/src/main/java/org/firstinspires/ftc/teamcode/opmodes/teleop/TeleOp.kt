@@ -20,7 +20,7 @@ class TeleOp: OpMode() {
     }
 
     private val flywheel by lazy {
-        Flywheel(hardwareMap) {
+        Flywheel(hardwareMap, telemetry) {
             val motor = hardwareMap["frontRightDriveMotor"] as DcMotorEx
             motor.velocity / 28.0 * 60.0 // Conversion from ticks/s to rpm
         }
@@ -54,11 +54,19 @@ class TeleOp: OpMode() {
 
     private var flywheelActive = false
 
-    private val timer = ElapsedTime()
+    private val automaticIntakeTimer = ElapsedTime()
 
     private var index = 1
 
     private var spindexerMovingToFreeSlot = false
+    private var automaticIntakeTimerStarted = false
+
+    enum class FlywheelHomingState {
+        NOT_HOMED,
+        HOMED
+    }
+
+    private var state: FlywheelHomingState = HOMED
 
     override fun init() {
         transfer.down()
@@ -85,6 +93,8 @@ class TeleOp: OpMode() {
         var turn = gamepad1.right_stick_x.toDouble()
         if (abs(turn) < 0.05) {
             turn = 0.0
+        } else {
+            turn *= abs(turn)
         }
 
         telemetry.addLine("Drive: $drive")
@@ -100,8 +110,7 @@ class TeleOp: OpMode() {
             flywheelActive = !flywheelActive
         }
 
-
-        flywheel.targetRPM = if (flywheelActive) 3500.0 else 0.0
+        flywheel.targetRPM = if (flywheelActive) 3700.0 else 0.0
         flywheel.debug(telemetry, verbose = false)
         flywheel.update()
 
@@ -121,17 +130,52 @@ class TeleOp: OpMode() {
 
         if (intake.isActive()) {
             if (spindexer.artifactInIntakeSlot && !spindexerMovingToFreeSlot) {
-                spindexerMovingToFreeSlot = true
+                if (!automaticIntakeTimerStarted) {
+                    automaticIntakeTimer.reset()
+                    automaticIntakeTimerStarted = true
+                }
 
-                index = (index + 1).mod(3) // TODO Once we keep track of the balls, we can optimize the position
+                if (automaticIntakeTimer.seconds() > 0.1) {
+                    spindexerMovingToFreeSlot = true
+                    automaticIntakeTimerStarted = false
+
+                    index = (index + 1).mod(3) // TODO Once we keep track of the balls, we can optimize the position
+                }
             }
         } else { // We only allow manual control if the intake isn't active. Otherwise, it introduces too many edge cases
-            if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
-                index = (index + 1).mod(3)
+
+            when (state) {
+                HOMED -> {
+                    if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
+                        index = (index + 1).mod(3)
+                    }
+                    if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
+                        index = (index - 1).mod(3)
+                    }
+                }
+                NOT_HOMED -> Unit
             }
         }
 
-        spindexer.toSlot(index, intake.mode == ACTIVE)
+        when (state) {
+            HOMED -> spindexer.toSlot(index, intake.mode == ACTIVE)
+            NOT_HOMED -> spindexer.targetPower = gamepad2.right_stick_x.toDouble()
+        }
+
+        if (currentGamepad.options && !previousGamepad.options) {
+            when (state) {
+                HOMED -> {
+                   state = NOT_HOMED
+                }
+                NOT_HOMED -> {
+                    spindexer.reset()
+                    state = HOMED
+                }
+            }
+        }
+
+
+        telemetry.addLine("State: $state")
 
         spindexer.debug(telemetry)
         spindexer.update()

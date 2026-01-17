@@ -16,6 +16,7 @@ import kotlin.math.abs
 
 class Flywheel(
     hardwareMap: HardwareMap,
+    private val telemetry: Telemetry,
     private val configuration: Configuration = Configuration.DEFAULT,
     private val rpmSupplier: () -> Double,
 ): Subsystem {
@@ -73,7 +74,7 @@ class Flywheel(
             require(target.isReal()) {
                 "Expected Real Target RPM. Got: $target"
             }
-            warnIf(target > 6000.0) {
+            warnIf(target > 6000.0, telemetry) {
                 "Attempting To Set Flywheel RPM to $target. This is above motor free speed."
             }
 
@@ -109,36 +110,44 @@ class Flywheel(
     @Throws(IllegalStateException::class)
     override fun update() {
         val voltage = voltageSensor.voltage
-        warnIf(voltage == 0.0) { "Voltage Is 0.0" }
+        warnIf(voltage == 0.0, telemetry) { "Voltage Is 0.0" }
 
         val voltageCompensationScalar = if (voltage == 0.0) 1.0 else 12.0 / voltage
-        warnIf(voltageCompensationScalar > 1.5) { "Voltage compensation output saturated" }
+        telemetry.addLine("Voltage Compensation Scalar: $voltageCompensationScalar")
+        warnIf(voltageCompensationScalar > 1.5, telemetry) { "Voltage compensation output saturated" }
 
         val ffOutput  = ff.calculate(targetRPM)
         val pidOutput = pid.calculate(rpm, targetRPM)
+        telemetry.addLine("Feedforward Output: $ffOutput")
+        telemetry.addLine("PID Output: $pidOutput")
 
         flywheelState = when {
             abs(targetRPM - rpm) < configuration.tolerance -> AT_VELOCITY
             rpm < targetRPM                                -> UNDER_VELOCITY
             rpm > targetRPM                                -> OVER_VELOCITY
-            else                                           -> unreachable()
+            else                                           -> AT_VELOCITY
         }
+
+//        when (flywheelState) {
+//            UNDER_VELOCITY, AT_VELOCITY -> {
+//                val outputPower = ffOutput * voltageCompensationScalar
+//                leaderMotor.power   = outputPower
+//                followerMotor.power = outputPower
+//            }
+//            OVER_VELOCITY               -> {
+//                leaderMotor.power   = pidOutput * voltageCompensationScalar
+//                followerMotor.power = ffOutput * voltageCompensationScalar
+//            }
+//        }
 
         when (controlMode) {
             VOLTAGE -> {
                 leaderMotor.power   = rawPower
                 followerMotor.power = rawPower
             }
-            VELOCITY -> when (flywheelState) {
-                UNDER_VELOCITY, AT_VELOCITY -> {
-                    val outputPower = ffOutput * voltageCompensationScalar
-                    leaderMotor.power   = outputPower
-                    followerMotor.power = outputPower
-                }
-                OVER_VELOCITY               -> {
-                    leaderMotor.power   = pidOutput * voltageCompensationScalar
-                    followerMotor.power = ffOutput * voltageCompensationScalar
-                }
+            VELOCITY -> {
+                leaderMotor.power   = (ffOutput + pidOutput) * voltageCompensationScalar
+                followerMotor.power = (ffOutput + pidOutput) * voltageCompensationScalar
             }
         }
     }
@@ -199,12 +208,12 @@ class Flywheel(
 
         companion object {
             val DEFAULT = Configuration(
-                pidCoefficients        = PIDCoefficients(0.0, 0.0, 0.0),
-                ffCoefficients         = FFCoefficients(1.48e-4, 0.0, 0.0),
+                pidCoefficients        = PIDCoefficients(0.001, 0.0, 0.0),
+                ffCoefficients         = FFCoefficients(0.00005, 0.0, 0.05),
                 leaderMotorDirection   = FORWARD,
                 followerMotorDirection = REVERSE,
                 maxPower               = 1.0,
-                tolerance              = 100.0,
+                tolerance              = 5.0,
             )
         }
     }
