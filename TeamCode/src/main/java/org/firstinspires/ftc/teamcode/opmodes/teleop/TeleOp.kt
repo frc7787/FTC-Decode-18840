@@ -56,7 +56,7 @@ class TeleOp: OpMode() {
 
     private val automaticIntakeTimer = ElapsedTime()
 
-    private var index = 1
+    private var index = 0
 
     private var spindexerMovingToFreeSlot = false
     private var automaticIntakeTimerStarted = false
@@ -110,7 +110,7 @@ class TeleOp: OpMode() {
             flywheelActive = !flywheelActive
         }
 
-        flywheel.targetRPM = if (flywheelActive) 3700.0 else 0.0
+        flywheel.targetRPM = if (flywheelActive) 4000.0 else 0.0
         flywheel.debug(telemetry, verbose = false)
         flywheel.update()
 
@@ -159,7 +159,11 @@ class TeleOp: OpMode() {
 
         when (state) {
             HOMED -> spindexer.toSlot(index, intake.mode == ACTIVE)
-            NOT_HOMED -> spindexer.targetPower = gamepad2.right_stick_x.toDouble()
+            NOT_HOMED -> spindexer.targetPower = run {
+                val raw     = gamepad2.right_stick_x.toDouble()
+                val squared = raw * abs(raw)
+                squared.coerceIn(-0.5, 0.5)
+            }
         }
 
         if (currentGamepad.options && !previousGamepad.options) {

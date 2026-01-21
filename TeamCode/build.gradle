@@ -23,6 +23,7 @@ android {
         jvmTarget = 1.8
 
         compileOptions {
+            freeCompilerArgs += "-Xexplicit-backing-fields"
             freeCompilerArgs += "-Xcontext-sensitive-resolution"
         }
     }

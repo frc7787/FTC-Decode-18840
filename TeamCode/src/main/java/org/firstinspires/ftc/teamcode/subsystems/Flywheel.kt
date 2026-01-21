@@ -209,7 +209,7 @@ class Flywheel(
         companion object {
             val DEFAULT = Configuration(
                 pidCoefficients        = PIDCoefficients(0.001, 0.0, 0.0),
-                ffCoefficients         = FFCoefficients(0.00005, 0.0, 0.05),
+                ffCoefficients         = FFCoefficients(0.000052, 0.0, 0.05),
                 leaderMotorDirection   = FORWARD,
                 followerMotorDirection = REVERSE,
                 maxPower               = 1.0,
