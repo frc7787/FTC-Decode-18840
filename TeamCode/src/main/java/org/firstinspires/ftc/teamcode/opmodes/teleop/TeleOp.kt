@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop
 
+import com.bylazar.configurables.annotations.Configurable
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Transfer
 import kotlin.math.abs
 
 @TeleOp(group = "$")
+@Configurable
 class TeleOp: OpMode() {
     private val intake by lazy {
         Intake(hardwareMap)
@@ -73,6 +75,11 @@ class TeleOp: OpMode() {
         transfer.update()
     }
 
+    companion object {
+        @JvmField
+        var TARGET_RPM: Double = 3800.0
+    }
+
     override fun loop() {
 
         previousGamepad.copy(currentGamepad)
@@ -110,7 +117,7 @@ class TeleOp: OpMode() {
             flywheelActive = !flywheelActive
         }
 
-        flywheel.targetRPM = if (flywheelActive) 4000.0 else 0.0
+        flywheel.targetRPM = if (flywheelActive) TARGET_RPM else 0.0
         flywheel.debug(telemetry, verbose = false)
         flywheel.update()
 
