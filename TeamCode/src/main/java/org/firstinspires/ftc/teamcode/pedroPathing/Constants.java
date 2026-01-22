@@ -34,13 +34,13 @@ public class Constants {
     }
 
     public static PinpointConstants pinpointConstants = new PinpointConstants()
-            .strafePodX(-6.299)
-            .forwardPodY(2.346)
+            .strafePodX(-6.693)
+            .forwardPodY(0.669)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
     public static MecanumConstants mecanumConstants = new MecanumConstants()
             .leftFrontMotorName("frontLeftDriveMotor")

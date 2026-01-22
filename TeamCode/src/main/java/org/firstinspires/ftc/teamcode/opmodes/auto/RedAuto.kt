@@ -26,20 +26,20 @@ import org.firstinspires.ftc.teamcode.util.Motif
 import org.firstinspires.ftc.vision.VisionPortal
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 
-@Autonomous(group = "Blue")
+@Autonomous(group = "Red")
 @Configurable
-class BlueAuto: LinearOpMode() {
+class RedAuto: LinearOpMode() {
 
     companion object {
 
         @JvmField
-        var START = Pose(23.0, 124.0, Math.toRadians(143.0))
+        var START = Pose(123.0, 124.0, Math.toRadians(36.0))
 
         @JvmField
-        var SHOOT = Pose(37.0, 116.0, Math.toRadians(143.0))
+        var SHOOT = Pose(116.0, 117.0, Math.toRadians(36.0))
 
         @JvmField
-        var END = Pose(53.0, 125.0, Math.toRadians(143.0))
+        var END = Pose(96.0, 128.0, Math.toRadians(36.0))
 
         @JvmField
         var GAIN = 100
