@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop
 
 import com.bylazar.configurables.annotations.Configurable
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotorEx
@@ -36,6 +37,14 @@ class TeleOp: OpMode() {
         MecanumDriveBase(hardwareMap)
     }
 
+    private val octoquad by lazy {
+        run {
+            val sensor = hardwareMap["octoquad"] as OctoQuad
+            sensor.channelBankConfig = ALL_PULSE_WIDTH
+            sensor
+        }
+    }
+
     private val spindexer by lazy {
         val motor = hardwareMap["frontLeftDriveMotor"] as DcMotorEx
         motor.mode = STOP_AND_RESET_ENCODER
@@ -43,13 +52,14 @@ class TeleOp: OpMode() {
 
         Spindexer(hardwareMap,
             { motor.currentPosition.toDouble() },
-            { motor.velocity },
+            { octoquad.readSingleVelocity_Caching(0).toDouble() },
+            { octoquad.readSinglePosition_Caching(0).toDouble() - 1.0 },
             {
-                motor.mode = STOP_AND_RESET_ENCODER
-                motor.mode = RUN_WITHOUT_ENCODER
+                octoquad.resetAllPositions()
             }
         )
     }
+
 
     private val currentGamepad  = Gamepad()
     private val previousGamepad = Gamepad()
@@ -73,17 +83,27 @@ class TeleOp: OpMode() {
     override fun init() {
         transfer.down()
         transfer.update()
+        spindexer.home()
+        spindexer.update()
     }
 
     companion object {
         @JvmField
         var TARGET_RPM: Double = 3800.0
+
+        @JvmField
+        var COEFFICIENTS = Spindexer.Configuration.DEFAULT.pidCoefficients
     }
 
     override fun loop() {
-
         previousGamepad.copy(currentGamepad)
         currentGamepad.copy(gamepad2)
+
+        spindexer.setPIDCoefficients(COEFFICIENTS)
+
+        if (currentGamepad.share && !previousGamepad.share) {
+            spindexer.home()
+        }
 
         // Drive
 
@@ -146,47 +166,20 @@ class TeleOp: OpMode() {
                     spindexerMovingToFreeSlot = true
                     automaticIntakeTimerStarted = false
 
-                    index = (index + 1).mod(3) // TODO Once we keep track of the balls, we can optimize the position
+                    index = (index - 1).mod(3) // TODO Once we keep track of the balls, we can optimize the position
                 }
             }
         } else { // We only allow manual control if the intake isn't active. Otherwise, it introduces too many edge cases
 
-            when (state) {
-                HOMED -> {
-                    if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
-                        index = (index + 1).mod(3)
-                    }
-                    if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
-                        index = (index - 1).mod(3)
-                    }
-                }
-                NOT_HOMED -> Unit
+//            if (currentGamepad.dpad_right && !previousGamepad.dpad_right) {
+//                index = (index + 1).mod(3)
+//            }
+            if (currentGamepad.dpad_left && !previousGamepad.dpad_left) {
+                index = (index - 1).mod(3)
             }
         }
 
-        when (state) {
-            HOMED -> spindexer.toSlot(index, intake.mode == ACTIVE)
-            NOT_HOMED -> spindexer.targetPower = run {
-                val raw     = gamepad2.right_stick_x.toDouble()
-                val squared = raw * abs(raw)
-                squared.coerceIn(-0.5, 0.5)
-            }
-        }
-
-        if (currentGamepad.options && !previousGamepad.options) {
-            when (state) {
-                HOMED -> {
-                   state = NOT_HOMED
-                }
-                NOT_HOMED -> {
-                    spindexer.reset()
-                    state = HOMED
-                }
-            }
-        }
-
-
-        telemetry.addLine("State: $state")
+        spindexer.toSlot(index, intake.mode == ACTIVE)
 
         spindexer.debug(telemetry)
         spindexer.update()

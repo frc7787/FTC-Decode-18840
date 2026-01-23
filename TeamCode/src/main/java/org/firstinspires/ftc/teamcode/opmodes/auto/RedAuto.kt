@@ -63,6 +63,7 @@ class RedAuto: LinearOpMode() {
         Spindexer(hardwareMap,
             { motor.currentPosition.toDouble() },
             { motor.velocity },
+            { TODO() },
             {
                 motor.mode = STOP_AND_RESET_ENCODER
                 motor.mode = RUN_WITHOUT_ENCODER

@@ -15,21 +15,24 @@ import org.firstinspires.ftc.teamcode.subsystems.Spindexer.ArtifactColor.PURPLE
 import org.firstinspires.ftc.teamcode.subsystems.Spindexer.ArtifactColor.UNKNOWN
 import org.firstinspires.ftc.teamcode.util.NotNaN
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 class Spindexer(
     hardwareMap: HardwareMap,
-    private val tickSupplier: () -> Double,
+    private val relativePositionSupplier: () -> Double,
     private val velocitySupplier: () -> Double,
+    private val absolutePositionSupplier: () -> Double,
     private val resetFunction: () -> Unit,
     private val configuration: Configuration = Configuration.DEFAULT,
 ) {
-    private val motor               = hardwareMap["spindexerMotor"]      as DcMotorSimple
-    private val intakeColorSensor   = hardwareMap["intakeColorSensor"]   as NormalizedColorSensor
-    private val flywheelColorSensor = hardwareMap["flywheelColorSensor"] as NormalizedColorSensor
+    private val motor             = hardwareMap["spindexerMotor"]    as DcMotorSimple
+    private val intakeColorSensor = hardwareMap["intakeColorSensor"] as NormalizedColorSensor
 
     private val pid = PIDController(configuration.pidCoefficients)
     private val feedforward  = FFController(configuration.ffCoefficients)
+
+    fun setPIDCoefficients(coefficients: PIDCoefficients) {
+        pid.coefficients = coefficients
+    }
 
     init {
         motor.direction = configuration.direction
@@ -80,14 +83,14 @@ class Spindexer(
             return abs(angle - 60.0) < 5.0 || abs(angle - 180.0) < 5.0 || abs(angle - 300.0) < 5.0
         }
 
-    val position: Double
+    val relativePosition: Double
         get() {
-            return tickSupplier.invoke()
+            return relativePositionSupplier.invoke()
         }
 
     val angle: Double
         get() {
-            return ((position / TICKS_PER_ROTATION) * 360.0).mod(360.0)
+            return (((relativePosition / RELATIVE_TICKS_PER_ROTATION) * 360.0) + offsetAngle).mod(360.0)
         }
 
     var targetAngle: Double = 0.0
@@ -128,6 +131,13 @@ class Spindexer(
 
     private var previousIndex = 0
     private var index = 0
+
+    private var offsetAngle: Double = 0.0
+
+    fun home() {
+        val absoluteAngle = (absolutePositionSupplier.invoke() / ABSOLUTE_TICKS_PER_ROTATION) * 360.0
+        offsetAngle = absoluteAngle - angle
+    }
 
     fun update() {
         Color.colorToHSV(intakeColorSensor.normalizedColors.toColor(), hsv)
@@ -171,7 +181,8 @@ class Spindexer(
 
     fun debug(telemetry: Telemetry) {
         telemetry.addLine("----- Spindexer -----")
-        telemetry.addLine("Position: $position")
+        telemetry.addLine("Position (Relative): $relativePosition")
+        telemetry.addLine("Position (Absolute): ${absolutePositionSupplier.invoke()}")
         telemetry.addLine("Angle: $angle")
         telemetry.addLine("Hue: ${hsv[0]}")
 
@@ -183,17 +194,16 @@ class Spindexer(
             else -> {}
         }
 
-        telemetry.addLine("Slot 0: ${slotStates[0]}")
-        telemetry.addLine("Slot 1: ${slotStates[1]}")
-        telemetry.addLine("Slot 2: ${slotStates[2]}")
         telemetry.addLine("At Intaking Position: $atIntakingPosition")
         telemetry.addLine("Velocity: $spindexerVelocity")
+        telemetry.addLine("Offset Deg: $offsetAngle")
 
         telemetry.addLine("Power: ${motor.power}")
     }
 
     companion object {
-        const val TICKS_PER_ROTATION = 725
+        const val ABSOLUTE_TICKS_PER_ROTATION = 1038.0
+        const val RELATIVE_TICKS_PER_ROTATION = 725.0
     }
 
     class Configuration(val direction: DcMotorSimple.Direction, val zeroPowerBehavior: DcMotor.ZeroPowerBehavior, homingPower: Double, minPower: Double, maxPower: Double, tolerance: Double, p: Double, i: Double, d: Double, ks: Double) {
@@ -250,9 +260,9 @@ class Spindexer(
                     minPower = -0.5,
                     maxPower = 0.5,
                     tolerance = 1.0,
-                    p = 0.03,
+                    p = 0.02,
                     i = 0.0,
-                    d = 0.00,
+                    d = 0.0005,
                     ks = 0.07
                 )
             }
