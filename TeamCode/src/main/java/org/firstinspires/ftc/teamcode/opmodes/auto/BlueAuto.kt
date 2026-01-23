@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable
 import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
 import com.pedropathing.paths.PathChain
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -51,6 +52,10 @@ class BlueAuto: LinearOpMode() {
         Constants.createFollower(hardwareMap)
     }
 
+    private val octoquad by lazy {
+        hardwareMap["octoquad"] as OctoQuad
+    }
+
     private val spindexer by lazy {
         val motor = hardwareMap["frontLeftDriveMotor"] as DcMotorEx
         motor.mode = STOP_AND_RESET_ENCODER
@@ -59,7 +64,7 @@ class BlueAuto: LinearOpMode() {
         Spindexer(hardwareMap,
             { motor.currentPosition.toDouble() },
             { motor.velocity },
-            { TODO() },
+            { octoquad.readSinglePosition_Caching(0).toDouble() - 1.0 },
             {
                 motor.mode = STOP_AND_RESET_ENCODER
                 motor.mode = RUN_WITHOUT_ENCODER
@@ -114,6 +119,8 @@ class BlueAuto: LinearOpMode() {
         waitForStart()
 
         flywheel.targetRPM = 4000.0
+
+        spindexer.home()
 
         followPath(startToShoot, intaking = false)
 

@@ -6,6 +6,7 @@ import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
 import com.pedropathing.paths.Path
 import com.pedropathing.paths.PathChain
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
@@ -55,6 +56,10 @@ class RedAuto: LinearOpMode() {
         Constants.createFollower(hardwareMap)
     }
 
+    private val octoquad by lazy {
+        hardwareMap["octoquad"] as OctoQuad
+    }
+
     private val spindexer by lazy {
         val motor = hardwareMap["frontLeftDriveMotor"] as DcMotorEx
         motor.mode = STOP_AND_RESET_ENCODER
@@ -63,7 +68,7 @@ class RedAuto: LinearOpMode() {
         Spindexer(hardwareMap,
             { motor.currentPosition.toDouble() },
             { motor.velocity },
-            { TODO() },
+            { octoquad.readSinglePosition_Caching(0).toDouble() - 1.0 },
             {
                 motor.mode = STOP_AND_RESET_ENCODER
                 motor.mode = RUN_WITHOUT_ENCODER
@@ -96,6 +101,8 @@ class RedAuto: LinearOpMode() {
             .build()
 
         waitForStart()
+
+        spindexer.home()
 
         flywheel.targetRPM = 4000.0
 
@@ -143,7 +150,9 @@ class RedAuto: LinearOpMode() {
         spindexer.toSlot(index, false)
         spindexer.update()
 
-        while (!spindexer.atPosition && !isStopRequested && opModeIsActive()) {
+        val timer = ElapsedTime()
+
+        while (!spindexer.atPosition && !isStopRequested && opModeIsActive() && timer.seconds() < 0.5) {
             telemetry.addLine("To Position")
             telemetry.update()
             flywheel.update()
