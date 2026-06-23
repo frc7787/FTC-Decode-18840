@@ -97,16 +97,20 @@ class Motor(private val internalMotor: DcMotorEx) {
 
     var encoderReversed: Boolean = false
 
-    fun debug(telemetry: Telemetry) {
-        telemetry.addLine("Power Tolerance: $powerTolerance")
+    fun debug(telemetry: Telemetry, name: String = "", simplified: Boolean = false) {
+        if (!name.isEmpty()) telemetry.addLine("----- Motor Debug ($name) ----- ")
         telemetry.addLine("Power: $power")
         telemetry.addLine("Zero Power Behavior: $zeroPowerBehavior")
         telemetry.addLine("Direction: $direction")
-        telemetry.addLine("Position Limit: $maxPosition")
-        telemetry.addLine("Raw Position: $rawPosition")
         telemetry.addLine("Position: $position")
         telemetry.addLine("RPM: $rpm")
-        telemetry.addLine("Current (Amps) ${currentAmps}")
-        telemetry.addLine("Stalled $stalled")
+
+        if (!simplified) {
+            telemetry.addLine("Power Tolerance: $powerTolerance")
+            telemetry.addLine("Position Limit: $maxPosition")
+            telemetry.addLine("Raw Position: $rawPosition")
+            telemetry.addLine("Current (Amps) $currentAmps")
+            telemetry.addLine("Stalled $stalled")
+        }
     }
 }

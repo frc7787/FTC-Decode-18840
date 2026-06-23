@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior
+import org.firstinspires.ftc.robotcore.external.Telemetry
 
 class MotorGroup(vararg motors: Motor) {
     private val motors = motors.toList()
@@ -74,4 +75,8 @@ class MotorGroup(vararg motors: Motor) {
         get() {
             return motors.all { motor -> motor.stalled }
         }
+
+    fun debug(telemetry: Telemetry, name: String = "", simplified: Boolean = false) {
+        motors.forEach { motor -> motor.debug(telemetry, name, simplified) }
+    }
 }

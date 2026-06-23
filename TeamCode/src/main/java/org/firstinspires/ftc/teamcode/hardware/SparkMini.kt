@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.math.abs
 
 class SparkMini(private val internalMotor: DcMotorSimple) {
@@ -35,4 +36,14 @@ class SparkMini(private val internalMotor: DcMotorSimple) {
         }
 
     var direction: Direction = FORWARD
+
+    fun debug(telemetry: Telemetry, name: String = "", simplified: Boolean = false) {
+        if (!name.isEmpty()) telemetry.addLine("----- Motor Debug ($name) ----- ")
+        telemetry.addLine("Power: $power")
+        telemetry.addLine("Direction: $direction")
+
+        if (!simplified) {
+            telemetry.addLine("Power Tolerance: $powerTolerance")
+        }
+    }
 }

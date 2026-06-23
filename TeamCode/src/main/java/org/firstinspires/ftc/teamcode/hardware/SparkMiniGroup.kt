@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
+import org.firstinspires.ftc.robotcore.external.Telemetry
 
 class SparkMiniGroup(vararg minis: SparkMini) {
     private val minis = minis.toList()
@@ -20,4 +21,8 @@ class SparkMiniGroup(vararg minis: SparkMini) {
         get() {
             return minis[0].direction
         }
+
+    fun debug(telemetry: Telemetry, name: String = "", simplified: Boolean = false) {
+        minis.forEach { mini -> mini.debug(telemetry, name, simplified) }
+    }
 }
