@@ -1,90 +1,49 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
+import com.pedropathing.ivy.Command
+import com.pedropathing.ivy.CommandBuilder
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.teamcode.util.Constrained
-import org.firstinspires.ftc.teamcode.util.NotNaN
+import com.qualcomm.robotcore.hardware.Servo.Direction
 
-class Transfer(
-    hardwareMap: HardwareMap,
-    private val configuration: Transfer.Configuration = Transfer.Configuration.DEFAULT
-): Subsystem {
-    private val servo = hardwareMap["transferServo"] as Servo
+class Transfer private constructor(hardwareMap: HardwareMap) {
+    val servo = hardwareMap["transferServo"] as Servo
 
     init {
-        servo.direction = configuration.servoDirection
-        servo.position  = configuration.downPosition
+       servo.direction = DIRECTION
     }
 
-    var targetPosition: Double = 0.0
-
-    var state: State = DOWN
-        private set
-
-    fun up() {
-        targetPosition = configuration.upPosition
+    fun toPosition(position: Double): Command {
+        return CommandBuilder()
+            .setStart {
+                servo.position = position
+            }
+            .requiring(this)
     }
 
-    fun down() {
-        targetPosition = configuration.downPosition
+    fun up(): Command {
+        return toPosition(UP_POSITION)
     }
 
-    override fun update() {
-        state = when (targetPosition) {
-            configuration.downPosition -> DOWN
-            configuration.upPosition   -> UP
-            else -> POSITION
+    fun down(): Command {
+        return toPosition(DOWN_POSITION)
+    }
+
+    companion object {
+        private const val UP_POSITION    = 0.02
+        private const val DOWN_POSITION  = 0.00
+        private val DIRECTION: Direction = FORWARD
+
+        private var INSTANCE: Transfer? = null
+
+        fun get(hardwareMap: HardwareMap): Transfer {
+            if (INSTANCE == null) INSTANCE = Transfer(hardwareMap)
+            return INSTANCE!!
         }
 
-        servo.position = targetPosition
-    }
-
-    override fun debug(telemetry: Telemetry, verbose: Boolean) {
-        telemetry.addLine()
-        telemetry.addLine("--- Transfer ---")
-        telemetry.addLine("Position: ${servo.position}")
-        if (verbose) {
-            telemetry.addLine("Direction: ${servo.direction}")
-        }
-    }
-
-    enum class State {
-        UP,
-        DOWN,
-        POSITION
-    }
-
-    class Configuration(upPosition: Double, downPosition: Double, minPosition: Double, maxPosition: Double, val servoDirection: Servo.Direction) {
-        val upPosition by NotNaN(upPosition)
-        val downPosition by NotNaN(downPosition)
-        val minPosition by NotNaN(minPosition)
-        val maxPosition by NotNaN(maxPosition)
-
-        fun with(
-            upPosition: Double = DEFAULT.upPosition,
-            downPosition: Double = DEFAULT.downPosition,
-            minPosition: Double = DEFAULT.minPosition,
-            maxPosition: Double = DEFAULT.maxPosition,
-            servoDirection: Servo.Direction = DEFAULT.servoDirection
-        ): Transfer.Configuration {
-            return Transfer.Configuration(
-                upPosition,
-                downPosition,
-                minPosition,
-                maxPosition,
-                servoDirection
-            )
-        }
-
-        companion object {
-            val DEFAULT = Transfer.Configuration(
-                upPosition     = 0.18,
-                downPosition   = 0.03,
-                minPosition    = 0.03,
-                maxPosition    = 0.33,
-                servoDirection = FORWARD
-            )
+        fun destroy() {
+            INSTANCE = null
+            System.gc()
         }
     }
 }

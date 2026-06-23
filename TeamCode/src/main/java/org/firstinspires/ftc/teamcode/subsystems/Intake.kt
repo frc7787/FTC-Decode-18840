@@ -1,72 +1,54 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
-import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.pedropathing.ivy.Command
+import com.pedropathing.ivy.CommandBuilder
+import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.teamcode.util.Constrained
-import kotlin.math.abs
+import org.firstinspires.ftc.teamcode.hardware.SparkMini
 
-class Intake(
-    hardwareMap: HardwareMap,
-    val configuration: Configuration = Configuration.DEFAULT
-): Subsystem {
-    private val motor = hardwareMap["intakeMotor"] as DcMotorSimple
+class Intake private constructor(hardwareMap: HardwareMap) {
+    private val motor = SparkMini(hardwareMap["intakeMotor"] as CRServo)
 
     init {
-        motor.direction = configuration.direction
+        motor.minPower = MIN_POWER
+        motor.maxPower = MAX_POWER
     }
 
-    var power: Double = 0.0
-        set(power) {
-            val constrainedPower = power.coerceIn(configuration.minPower, configuration.maxPower)
-            mode = if (abs(constrainedPower) < 0.02) STOPPED else ACTIVE
-            field = constrainedPower
+    fun run(power: Double): Command {
+        return CommandBuilder()
+            .setStart {
+                motor.power = power
+            }
+            .setEnd {
+                motor.power = 0.0
+            }
+            .requiring(this)
+    }
+
+    fun intake(): Command {
+        return run(INTAKE_POWER)
+    }
+
+    fun outtake(): Command {
+        return run(OUTTAKE_POWER)
+    }
+
+    companion object {
+        private const val MIN_POWER     = -1.0
+        private const val MAX_POWER     = 1.0
+        private const val INTAKE_POWER  = 0.6
+        private const val OUTTAKE_POWER = -0.8
+
+        private var INSTANCE: Intake? = null
+
+        fun get(hardwareMap: HardwareMap): Intake {
+            if (INSTANCE == null) INSTANCE = Intake(hardwareMap)
+            return INSTANCE!!
         }
 
-    var mode: Mode = STOPPED
-        private set
-
-    fun isActive(): Boolean {
-        return mode == ACTIVE
-    }
-
-    fun isStopped(): Boolean {
-        return mode == STOPPED
-    }
-
-    override fun update() {
-        motor.power = power
-
-        mode = when (power) {
-            0.0 -> STOPPED
-            else -> ACTIVE
-        }
-    }
-
-    override fun debug(telemetry: Telemetry, verbose: Boolean) {
-        telemetry.addLine("---- Intake ----")
-        telemetry.addLine("Power: $power")
-        if (verbose) {
-            telemetry.addLine("Direction: ${motor.direction}")
-        }
-    }
-
-    enum class Mode {
-        ACTIVE,
-        STOPPED
-    }
-
-    data class Configuration(
-        val minPower: Double,
-        val maxPower: Double,
-        val direction: DcMotorSimple.Direction,
-    ) {
-        companion object {
-            val DEFAULT = Configuration(
-                    minPower = -1.0,
-                    maxPower = 1.0,
-                    direction = FORWARD
-                )
+        fun destroy() {
+            INSTANCE = null
+            System.gc()
         }
     }
 }

@@ -1,231 +1,71 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
-import com.qualcomm.robotcore.hardware.DcMotorSimple
+import com.pedropathing.ivy.Command
+import com.pedropathing.ivy.CommandBuilder
+import com.qualcomm.robotcore.hardware.CRServo
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.VoltageSensor
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.teamcode.control.FFCoefficients
-import org.firstinspires.ftc.teamcode.control.FFController
-import org.firstinspires.ftc.teamcode.control.PIDCoefficients
-import org.firstinspires.ftc.teamcode.control.PIDController
-import org.firstinspires.ftc.teamcode.math.isReal
-import org.firstinspires.ftc.teamcode.util.NotNaN
-import org.firstinspires.ftc.teamcode.util.unreachable
-import org.firstinspires.ftc.teamcode.util.warnIf
-import kotlin.math.abs
+import org.firstinspires.ftc.teamcode.control.Feedforward
+import org.firstinspires.ftc.teamcode.control.PID
+import org.firstinspires.ftc.teamcode.hardware.Encoder
+import org.firstinspires.ftc.teamcode.hardware.SparkMini
+import org.firstinspires.ftc.teamcode.hardware.SparkMiniGroup
+import java.net.InetSocketAddress
 
-class Flywheel(
-    hardwareMap: HardwareMap,
-    private val telemetry: Telemetry,
-    private val configuration: Configuration = Configuration.DEFAULT,
-    private val rpmSupplier: () -> Double,
-): Subsystem {
-    private val leaderMotor   = hardwareMap["leaderFlywheelMotor"]   as DcMotorSimple
-    private val followerMotor = hardwareMap["followerFlywheelMotor"] as DcMotorSimple
-    private val voltageSensor = hardwareMap.getAll(VoltageSensor::class.java)[0]!!
+class Flywheel private constructor(hardwareMap: HardwareMap) {
+    val motors = SparkMiniGroup(
+        SparkMini(hardwareMap["flywheelMotorOne"] as CRServo).also { motor ->
+            motor.direction = FLYWHEEL_MOTOR_ONE_DIRECTION
+        },
+        SparkMini(hardwareMap["flywheelMotorTwo"] as CRServo).also { motor ->
+            motor.direction = FLYWHEEL_MOTOR_TWO_DIRECTION
+        }
+    )
 
-    private val ff  = FFController(configuration.ffCoefficients)
-    private val pid = PIDController(configuration.pidCoefficients)
+    val encoder = Encoder(hardwareMap["frontLeftDriveMotor"] as DcMotorEx)
 
-    init {
-        leaderMotor.direction   = configuration.leaderMotorDirection
-        followerMotor.direction = configuration.followerMotorDirection
-        pid.tolerance = configuration.tolerance
+    private val feedforward = Feedforward(KV, KA, KS)
+    private val pid = PID(KP, KI, KD)
+
+    fun spinAt(targetRpm: Double): Command {
+        return CommandBuilder()
+            .setStart {
+                if (targetRpm > MAX_ACHIEVABLE_RPM) {
+                    // TODO Add Warning To Log
+                }
+            }
+            .setExecute {
+                val rpm = encoder.rpm
+                motors.power = feedforward.calculate(rpm , targetRpm) + pid.calculate(rpm, targetRpm)
+            }
+            .setDone { false }
+            .requiring(this)
     }
 
-    val rpm: Double
-        get() {
-            return rpmSupplier()
+    companion object {
+        private val FLYWHEEL_MOTOR_ONE_DIRECTION: Direction = FORWARD
+        private val FLYWHEEL_MOTOR_TWO_DIRECTION: Direction = FORWARD
+        private const val MAX_ACHIEVABLE_RPM = 4500
+
+        private const val KV = 0.0001
+        private const val KA = 0.0
+        private const val KS = 0.11
+
+        private const val KP = 0.0064
+        private const val KI = 0.0
+        private const val KD = 0.00056
+
+        private var INSTANCE: Flywheel? = null
+
+        fun get(hardwareMap: HardwareMap): Flywheel {
+            if (INSTANCE == null) INSTANCE = Flywheel(hardwareMap)
+            return INSTANCE!!
         }
 
-    val motorPower: Double
-        get() {
-            return leaderMotor.power
+        fun destroy() {
+            INSTANCE = null
+            System.gc()
         }
-
-    var pidCoefficients: PIDCoefficients = PIDCoefficients(0.0, 0.0, 0.0)
-        set(value) {
-            pid.coefficients = value
-            field = value
-        }
-
-    var ffCoefficients: FFCoefficients = FFCoefficients(0.0, 0.0, 0.0)
-        set(value) {
-            ff.coefficients = value
-            field = value
-        }
-
-    // State
-
-    var controlMode: ControlMode = VOLTAGE
-        private set
-
-    /**
-     * @throws IllegalArgumentException If the value of target RPM is set to NaN or Infinity
-     */
-    var targetRPM: Double = 0.0
-        @Throws(IllegalStateException::class)
-        get() {
-            check(controlMode == VELOCITY) { "Cannot Obtain Target RPM Unless 'mode' is set to RPM"}
-            return field
-        }
-        @Throws(IllegalArgumentException::class)
-        set(target) {
-            require(target.isReal()) {
-                "Expected Real Target RPM. Got: $target"
-            }
-            warnIf(target > 6000.0, telemetry) {
-                "Attempting To Set Flywheel RPM to $target. This is above motor free speed."
-            }
-
-            controlMode = VELOCITY
-            field = target
-        }
-
-    var flywheelState: FlywheelState = AT_VELOCITY
-        @Throws(IllegalArgumentException::class)
-        get() {
-            check(controlMode == VELOCITY) { "Cannot obtain flywheel state unless control mode is set to velocity" }
-            return field
-        }
-        private set
-
-    var rawPower: Double = 0.0
-        @Throws(IllegalStateException::class)
-        get() {
-            check(controlMode == VOLTAGE) { "Cannot obtain raw power unless the state is RAW. To get the power of the motor use 'motorPower'" }
-            return field
-        }
-        @Throws(IllegalArgumentException::class)
-        set(target) {
-            require(target.isReal()) { "Expected Real Target Power. Got: $target" }
-
-            controlMode = VOLTAGE
-
-            field = target.coerceIn(-configuration.maxPower, configuration.maxPower)
-        }
-
-    // State
-
-    @Throws(IllegalStateException::class)
-    override fun update() {
-        val voltage = voltageSensor.voltage
-        warnIf(voltage == 0.0, telemetry) { "Voltage Is 0.0" }
-
-        val voltageCompensationScalar = if (voltage == 0.0) 1.0 else 12.0 / voltage
-        telemetry.addLine("Voltage Compensation Scalar: $voltageCompensationScalar")
-        warnIf(voltageCompensationScalar > 1.5, telemetry) { "Voltage compensation output saturated" }
-
-        val ffOutput  = ff.calculate(targetRPM)
-        val pidOutput = pid.calculate(rpm, targetRPM)
-        telemetry.addLine("Feedforward Output: $ffOutput")
-        telemetry.addLine("PID Output: $pidOutput")
-
-        flywheelState = when {
-            abs(targetRPM - rpm) < configuration.tolerance -> AT_VELOCITY
-            rpm < targetRPM                                -> UNDER_VELOCITY
-            rpm > targetRPM                                -> OVER_VELOCITY
-            else                                           -> AT_VELOCITY
-        }
-
-//        when (flywheelState) {
-//            UNDER_VELOCITY, AT_VELOCITY -> {
-//                val outputPower = ffOutput * voltageCompensationScalar
-//                leaderMotor.power   = outputPower
-//                followerMotor.power = outputPower
-//            }
-//            OVER_VELOCITY               -> {
-//                leaderMotor.power   = pidOutput * voltageCompensationScalar
-//                followerMotor.power = ffOutput * voltageCompensationScalar
-//            }
-//        }
-
-        when (controlMode) {
-            VOLTAGE -> {
-                leaderMotor.power   = rawPower
-                followerMotor.power = rawPower
-            }
-            VELOCITY -> {
-                leaderMotor.power   = (ffOutput + pidOutput) * voltageCompensationScalar
-                followerMotor.power = (ffOutput + pidOutput) * voltageCompensationScalar
-            }
-        }
-    }
-
-    fun stop() {
-        rawPower = 0.0
-    }
-
-    override fun debug(telemetry: Telemetry, verbose: Boolean) {
-        telemetry.addLine("---- Flywheel ----")
-        telemetry.addLine("Control Mode: $controlMode")
-        telemetry.addLine("Voltage: ${voltageSensor.voltage}")
-        when (controlMode) {
-            VOLTAGE  -> {
-                telemetry.addLine("Power: $rawPower")
-            }
-            VELOCITY -> {
-                telemetry.addLine("Power: $motorPower")
-                telemetry.addLine("Current RPM: $rpm")
-                telemetry.addLine("Target RPM: $targetRPM")
-                telemetry.addLine("Flywheel State: $flywheelState")
-            }
-        }
-
-        if (verbose) {
-            telemetry.addLine("Direction: ${leaderMotor.direction}")
-        }
-    }
-
-    class Configuration(val pidCoefficients: PIDCoefficients, val ffCoefficients: FFCoefficients, val leaderMotorDirection: DcMotorSimple.Direction, val followerMotorDirection: DcMotorSimple.Direction, maxPower: Double, val tolerance: Double) {
-        val maxPower by NotNaN(maxPower)
-
-        init {
-            require(maxPower.isReal()) {
-                "Expected Real Max Power. Got: $maxPower"
-            }
-        }
-
-        fun with(
-            pidCoefficients: PIDCoefficients                = DEFAULT.pidCoefficients,
-            ffCoefficients: FFCoefficients                  = DEFAULT.ffCoefficients,
-            leaderMotorDirection: DcMotorSimple.Direction   = DEFAULT.leaderMotorDirection,
-            followerMotorDirection: DcMotorSimple.Direction = DEFAULT.followerMotorDirection,
-            maxPower: Double                                = DEFAULT.maxPower,
-            tolerance: Double                               = DEFAULT.tolerance
-        ): Configuration {
-            return Configuration(
-                pidCoefficients,
-                ffCoefficients,
-                leaderMotorDirection,
-                followerMotorDirection,
-                maxPower,
-                tolerance
-            )
-        }
-
-
-
-        companion object {
-            val DEFAULT = Configuration(
-                pidCoefficients        = PIDCoefficients(0.001, 0.0, 0.0),
-                ffCoefficients         = FFCoefficients(0.000052, 0.0, 0.05),
-                leaderMotorDirection   = FORWARD,
-                followerMotorDirection = REVERSE,
-                maxPower               = 1.0,
-                tolerance              = 5.0,
-            )
-        }
-    }
-
-    enum class ControlMode {
-        VOLTAGE,
-        VELOCITY,
-    }
-
-    enum class FlywheelState {
-        UNDER_VELOCITY,
-        AT_VELOCITY,
-        OVER_VELOCITY
     }
 }
