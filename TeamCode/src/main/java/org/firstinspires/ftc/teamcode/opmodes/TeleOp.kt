@@ -6,7 +6,7 @@ import com.pedropathing.ivy.commands.Commands.conditional
 import com.pedropathing.ivy.groups.Groups.*
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants
+import org.firstinspires.ftc.teamcode.pedropathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.*
 import kotlin.math.abs
 

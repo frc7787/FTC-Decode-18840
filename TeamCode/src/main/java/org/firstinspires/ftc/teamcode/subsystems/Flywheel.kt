@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.control.BangBang
 import org.firstinspires.ftc.teamcode.control.Feedforward
 import org.firstinspires.ftc.teamcode.control.PID
 import org.firstinspires.ftc.teamcode.hardware.Encoder
@@ -25,8 +26,7 @@ class Flywheel private constructor(hardwareMap: HardwareMap) {
 
     val encoder = Encoder(hardwareMap["frontLeftDriveMotor"] as DcMotorEx)
 
-    private val feedforward = Feedforward(KV, KA, KS)
-    private val pid = PID(KP, KI, KD)
+    private val bangBang = BangBang(ZERO_POWER)
 
     fun spinAt(targetRpm: Double): Command {
         return CommandBuilder()
@@ -36,8 +36,7 @@ class Flywheel private constructor(hardwareMap: HardwareMap) {
                 }
             }
             .setExecute {
-                val rpm = encoder.rpm
-                motors.power = feedforward.calculate(rpm , targetRpm) + pid.calculate(rpm, targetRpm)
+                motors.power = bangBang.update(encoder.rpm, targetRpm)
             }
             .setDone { false }
             .requiring(this)
@@ -47,14 +46,6 @@ class Flywheel private constructor(hardwareMap: HardwareMap) {
         private val FLYWHEEL_MOTOR_ONE_DIRECTION: Direction = FORWARD
         private val FLYWHEEL_MOTOR_TWO_DIRECTION: Direction = FORWARD
         private const val MAX_ACHIEVABLE_RPM = 4500
-
-        private const val KV = 0.0001
-        private const val KA = 0.0
-        private const val KS = 0.11
-
-        private const val KP = 0.0064
-        private const val KI = 0.0
-        private const val KD = 0.00056
 
         private var INSTANCE: Flywheel? = null
 
