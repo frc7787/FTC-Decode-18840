@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto
 
-import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
+import com.pedropathing.ivy.Command
 import com.pedropathing.ivy.Scheduler.schedule
 import com.pedropathing.ivy.commands.Commands.waitMs
 import com.pedropathing.ivy.groups.Groups.deadline
@@ -13,7 +13,6 @@ import com.pedropathing.paths.Path
 import com.pedropathing.paths.PathChain
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import org.firstinspires.ftc.teamcode.pedropathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.Flywheel
 import org.firstinspires.ftc.teamcode.subsystems.Intake
@@ -21,7 +20,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Spindexer
 import org.firstinspires.ftc.teamcode.subsystems.Transfer
 
 @Autonomous(group = "Blue")
-class BlueFarAuto: LinearOpMode() {
+class BasicAuto: LinearOpMode() {
 
     private val intake by lazy {
         Intake.get(hardwareMap)
@@ -43,12 +42,31 @@ class BlueFarAuto: LinearOpMode() {
         Constants.createFollower(hardwareMap)
     }
 
+    private fun shoot(timeoutMs: Double): Command {
+        return deadline(
+            waitMs(timeoutMs),
+            transfer.up(),
+            spindexer.power(0.5)
+        )
+    }
+
     private val startToShootPath by lazy {
         PathChain(
             Path(
                 BezierLine(
                     Pose(0.0, 0.0, 0.0),
-                    Pose(10.0, 10.0, 10.0)
+                    Pose(0.0, 0.0, 0.0),
+                )
+            )
+        )
+    }
+
+    private val pickUpGoalArtifactsPath by lazy {
+        PathChain(
+            Path(
+                BezierLine(
+                    Pose(0.0, 0.0, 0.0),
+                    Pose(0.0, 0.0, 0.0),
                 )
             )
         )
@@ -59,10 +77,10 @@ class BlueFarAuto: LinearOpMode() {
             parallel(
                 sequential(
                     follow(follower, startToShootPath),
+                    shoot(timeoutMs = 1500.0),
                     deadline(
-                        waitMs(1000.0),
-                        transfer.up(),
-                        spindexer.power(0.5)
+                        follow(follower, pickUpGoalArtifactsPath),
+                        intake.intake()
                     )
                 ),
                 flywheel.spinAt(2000.0)
