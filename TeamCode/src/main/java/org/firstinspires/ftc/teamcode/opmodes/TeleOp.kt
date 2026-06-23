@@ -3,16 +3,11 @@ package org.firstinspires.ftc.teamcode.opmodes
 import com.pedropathing.ivy.Scheduler.schedule
 import com.pedropathing.ivy.Scheduler
 import com.pedropathing.ivy.commands.Commands.conditional
-import com.pedropathing.ivy.groups.Groups.deadline
-import com.pedropathing.ivy.groups.Groups.parallel
-import com.pedropathing.ivy.groups.Groups.sequential
+import com.pedropathing.ivy.groups.Groups.*
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
-import org.firstinspires.ftc.teamcode.subsystems.Flywheel
-import org.firstinspires.ftc.teamcode.subsystems.Intake
-import org.firstinspires.ftc.teamcode.subsystems.Spindexer
-import org.firstinspires.ftc.teamcode.subsystems.Transfer
+import org.firstinspires.ftc.teamcode.subsystems.*
 import kotlin.math.abs
 
 @TeleOp(group = "$")
@@ -69,7 +64,17 @@ class TeleOp: OpMode() {
             )
         }
 
-        if (gamepad1.squareWasReleased()) flywheelToggle = !flywheelToggle
+        if (gamepad1.leftBumperWasReleased()) {
+            schedule(intake.intake())
+        }
+
+        if (gamepad1.rightBumperWasReleased()) {
+            schedule(intake.intake())
+        }
+
+        if (gamepad1.squareWasReleased()) {
+            flywheelToggle = !flywheelToggle
+        }
 
         follower.setTeleOpDrive(
             run {
