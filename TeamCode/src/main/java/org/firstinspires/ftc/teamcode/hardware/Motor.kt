@@ -110,6 +110,7 @@ class Motor(private val internalMotor: DcMotorEx) {
             telemetry.addLine("Position Limit: $maxPosition")
             telemetry.addLine("Raw Position: $rawPosition")
             telemetry.addLine("Current (Amps) $currentAmps")
+            telemetry.addLine("Encoder Reversed: $encoderReversed")
             telemetry.addLine("Stalled $stalled")
         }
     }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware
 
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import org.firstinspires.ftc.robotcore.external.Telemetry
 
 class Encoder(private val internalMotor: DcMotorEx) {
 
@@ -25,4 +26,14 @@ class Encoder(private val internalMotor: DcMotorEx) {
         }
 
     var encoderReversed = false
+
+    fun debug(telemetry: Telemetry, name: String = "", simplified: Boolean = false) {
+        if (!name.isBlank()) telemetry.addLine("----- Debug Encoder ($name) -----")
+        telemetry.addLine("Position: $position")
+        telemetry.addLine("RPM: $rpm")
+
+        if (!simplified) {
+            telemetry.addLine("RawPosition: $rawPosition")
+        }
+    }
 }
