@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.util.RobotLog
 import org.firstinspires.ftc.teamcode.hardware.SparkMini
 import kotlin.math.abs
 
-class Spindexer private constructor(hardwareMap: HardwareMap) {
+class Spindexer(hardwareMap: HardwareMap) {
     private val motor = SparkMini(hardwareMap["spindexerMotor"] as CRServo)
     private val limitSwitch = hardwareMap["spindexerLimitSwitch"] as RevTouchSensor
 
@@ -89,15 +89,5 @@ class Spindexer private constructor(hardwareMap: HardwareMap) {
         private val MOTOR_DIRECTION: Direction = REVERSE
 
         private var INSTANCE: Spindexer? = null
-
-        fun get(hardwareMap: HardwareMap): Spindexer {
-            if (INSTANCE == null) INSTANCE = Spindexer(hardwareMap)
-            return INSTANCE!!
-        }
-
-        fun destroy() {
-            INSTANCE = null
-            System.gc()
-        }
     }
 }

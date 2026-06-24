@@ -14,19 +14,19 @@ import kotlin.math.abs
 class TeleOp: OpMode() {
 
     private val intake by lazy {
-        Intake.get(hardwareMap)
+        Intake(hardwareMap)
     }
 
     private val flywheel by lazy {
-        Flywheel.get(hardwareMap)
+        Flywheel(hardwareMap)
     }
 
     private val spindexer by lazy {
-        Spindexer.get(hardwareMap)
+        Spindexer(hardwareMap)
     }
 
     private val transfer by lazy {
-        Transfer.get(hardwareMap)
+        Transfer(hardwareMap)
     }
 
     private val follower by lazy {

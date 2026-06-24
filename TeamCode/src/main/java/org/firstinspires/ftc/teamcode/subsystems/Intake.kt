@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.hardware.SparkMini
 
-class Intake private constructor(hardwareMap: HardwareMap) {
+class Intake(hardwareMap: HardwareMap) {
     private val motor = SparkMini(hardwareMap["intakeMotor"] as CRServo)
 
     init {
@@ -38,17 +38,5 @@ class Intake private constructor(hardwareMap: HardwareMap) {
         private const val MAX_POWER     = 1.0
         private const val INTAKE_POWER  = 0.6
         private const val OUTTAKE_POWER = -0.8
-
-        private var INSTANCE: Intake? = null
-
-        fun get(hardwareMap: HardwareMap): Intake {
-            if (INSTANCE == null) INSTANCE = Intake(hardwareMap)
-            return INSTANCE!!
-        }
-
-        fun destroy() {
-            INSTANCE = null
-            System.gc()
-        }
     }
 }

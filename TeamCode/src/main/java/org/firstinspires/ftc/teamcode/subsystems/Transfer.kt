@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.hardware.Servo.Direction
 
-class Transfer private constructor(hardwareMap: HardwareMap) {
-    val servo = hardwareMap["transferServo"] as Servo
+class Transfer(hardwareMap: HardwareMap) {
+    private val servo = hardwareMap["transferServo"] as Servo
 
     init {
        servo.direction = DIRECTION
@@ -33,17 +33,5 @@ class Transfer private constructor(hardwareMap: HardwareMap) {
         private const val UP_POSITION    = 0.02
         private const val DOWN_POSITION  = 0.00
         private val DIRECTION: Direction = FORWARD
-
-        private var INSTANCE: Transfer? = null
-
-        fun get(hardwareMap: HardwareMap): Transfer {
-            if (INSTANCE == null) INSTANCE = Transfer(hardwareMap)
-            return INSTANCE!!
-        }
-
-        fun destroy() {
-            INSTANCE = null
-            System.gc()
-        }
     }
 }
