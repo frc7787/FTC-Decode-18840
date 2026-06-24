@@ -29,6 +29,10 @@ class TeleOp: OpMode() {
         Transfer(hardwareMap)
     }
 
+    private val camera by lazy {
+        Camera(hardwareMap)
+    }
+
     private val follower by lazy {
         Constants.createFollower(hardwareMap)
     }
@@ -46,6 +50,10 @@ class TeleOp: OpMode() {
     private var flywheelToggle = false
 
     override fun loop() {
+        camera.detectedTags().forEach { detection ->
+            telemetry.addLine("Tag Detected With ID: ${detection.id}")
+        }
+
         if (gamepad1.circleWasReleased()) {
             schedule(
                 parallel(
