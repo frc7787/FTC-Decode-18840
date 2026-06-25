@@ -33,13 +33,16 @@ class Flywheel(hardwareMap: HardwareMap) {
     private val bangBang = BangBang(ZERO_POWER)
 
     fun spinAt(targetRpm: Double): Command {
+        return spinAt { targetRpm }
+    }
+
+    fun spinAt(targetRpmSupplier: () -> Double): Command {
         return CommandBuilder()
-            .setStart {
-                if (targetRpm > MAX_ACHIEVABLE_RPM) {
-                    RobotLog.ww("FLYWHEEL", "Attempting to set target RPM to $targetRpm. This is greater than the configured max achievable RPM (${MAX_ACHIEVABLE_RPM}")
-                }
-            }
             .setExecute {
+                val targetRpm = targetRpmSupplier.invoke()
+                if (targetRpm > MAX_ACHIEVABLE_RPM) {
+                    RobotLog.ww("FLYWHEEL", "Attempting to set flywheel to RPM $targetRpm. This is above the configured max achievable RPM of $MAX_ACHIEVABLE_RPM")
+                }
                 motors.power = bangBang.update(encoder.rpm, targetRpm)
             }
             .setDone { false }
