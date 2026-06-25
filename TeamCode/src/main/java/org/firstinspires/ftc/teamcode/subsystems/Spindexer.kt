@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
+import com.bylazar.configurables.annotations.Configurable
 import com.pedropathing.ivy.Command
 import com.pedropathing.ivy.CommandBuilder
 import com.pedropathing.ivy.behaviors.BlockedBehavior
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.util.RobotLog
 import org.firstinspires.ftc.teamcode.hardware.SparkMini
 import kotlin.math.abs
 
+@Configurable
 class Spindexer(hardwareMap: HardwareMap) {
     private val motor = SparkMini(hardwareMap["spindexerMotor"] as CRServo)
     private val limitSwitch = hardwareMap["spindexerLimitSwitch"] as RevTouchSensor
@@ -25,12 +27,7 @@ class Spindexer(hardwareMap: HardwareMap) {
     fun power(power: Double): Command {
         return CommandBuilder()
             .setStart {
-                motor.power = if (power < 0.0) {
-                    RobotLog.ww("SPINDEXER", "Cannot Spin Spindexer Clockwise! Taking Abs.")
-                    abs(power)
-                } else {
-                    power
-                }
+                motor.power = abs(power).coerceAtMost(MAX_POWER)
             }
             .setDone { false }
             .requiring(this)
@@ -86,8 +83,7 @@ class Spindexer(hardwareMap: HardwareMap) {
     }
 
     companion object {
-        private val MOTOR_DIRECTION: Direction = REVERSE
-
-        private var INSTANCE: Spindexer? = null
+        @JvmStatic var MOTOR_DIRECTION: Direction = REVERSE
+        @JvmStatic var MAX_POWER: Double = 0.8
     }
 }

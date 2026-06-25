@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
+import com.bylazar.configurables.annotations.Configurable
 import com.pedropathing.ivy.Command
 import com.pedropathing.ivy.CommandBuilder
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.util.RobotLog
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.teamcode.control.BangBang
 import org.firstinspires.ftc.teamcode.control.Feedforward
 import org.firstinspires.ftc.teamcode.control.PID
@@ -14,6 +17,7 @@ import org.firstinspires.ftc.teamcode.hardware.SparkMini
 import org.firstinspires.ftc.teamcode.hardware.SparkMiniGroup
 import java.net.InetSocketAddress
 
+@Configurable
 class Flywheel(hardwareMap: HardwareMap) {
     private val motors = SparkMiniGroup(
         SparkMini(hardwareMap["flywheelMotorOne"] as CRServo).also { motor ->
@@ -32,7 +36,7 @@ class Flywheel(hardwareMap: HardwareMap) {
         return CommandBuilder()
             .setStart {
                 if (targetRpm > MAX_ACHIEVABLE_RPM) {
-                    // TODO Add Warning To Log
+                    RobotLog.ww("FLYWHEEL", "Attempting to set target RPM to $targetRpm. This is greater than the configured max achievable RPM (${MAX_ACHIEVABLE_RPM}")
                 }
             }
             .setExecute {
@@ -43,8 +47,8 @@ class Flywheel(hardwareMap: HardwareMap) {
     }
 
     companion object {
-        private val FLYWHEEL_MOTOR_ONE_DIRECTION: Direction = FORWARD
-        private val FLYWHEEL_MOTOR_TWO_DIRECTION: Direction = FORWARD
-        private const val MAX_ACHIEVABLE_RPM = 4500
+        @JvmStatic var FLYWHEEL_MOTOR_ONE_DIRECTION: Direction = FORWARD
+        @JvmStatic var FLYWHEEL_MOTOR_TWO_DIRECTION: Direction = FORWARD
+        @JvmStatic var MAX_ACHIEVABLE_RPM = 4500
     }
 }

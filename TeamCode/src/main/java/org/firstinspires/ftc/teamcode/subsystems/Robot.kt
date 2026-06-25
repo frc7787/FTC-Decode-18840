@@ -5,14 +5,27 @@ import org.firstinspires.ftc.teamcode.pedropathing.Constants
 import org.firstinspires.ftc.teamcode.subsystems.vision.Camera
 
 class Robot(hardwareMap: HardwareMap) {
-    val flywheel  = Flywheel(hardwareMap)
-    val intake    = Intake(hardwareMap)
-    val transfer  = Transfer(hardwareMap)
-    val spindexer = Spindexer(hardwareMap)
-    val camera    = Camera(hardwareMap)
-    val follower  = Constants.createFollower(hardwareMap)
+    val flywheel by lazy {
+        Flywheel(hardwareMap)
+    }
 
-    fun init() {
+    val intake by lazy {
+        Intake(hardwareMap)
+    }
 
+    val transfer by lazy {
+        Transfer(hardwareMap)
+    }
+
+    val spindexer by lazy {
+        Spindexer(hardwareMap)
+    }
+
+    val camera by lazy {
+        Camera(hardwareMap)
+    }
+
+    val follower by lazy {
+        Constants.createFollower(hardwareMap)
     }
 }

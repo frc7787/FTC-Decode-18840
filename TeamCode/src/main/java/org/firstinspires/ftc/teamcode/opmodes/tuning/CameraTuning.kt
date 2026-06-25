@@ -15,7 +15,11 @@ class CameraTuning: OpMode() {
     }
 
     override fun init() {
-        robot.init()
+        with (robot) {
+            camera.setGain(GAIN)
+            camera.setWhiteBalance(WHITE_BALANCE)
+            camera.setExposure(EXPOSURE, EXPOSURE_UNIT)
+        }
     }
 
     override fun loop() {
@@ -31,9 +35,9 @@ class CameraTuning: OpMode() {
     }
 
     companion object {
-        @JvmStatic private var GAIN: Int               = 200
-        @JvmStatic private var WHITE_BALANCE: Int      = 2000
-        @JvmStatic private var EXPOSURE: Long          = 5
-        @JvmStatic private var EXPOSURE_UNIT: TimeUnit = MILLISECONDS
+        @JvmStatic var GAIN: Int               = 200
+        @JvmStatic var WHITE_BALANCE: Int      = 2000
+        @JvmStatic var EXPOSURE: Long          = 5
+        @JvmStatic var EXPOSURE_UNIT: TimeUnit = MILLISECONDS
     }
 }

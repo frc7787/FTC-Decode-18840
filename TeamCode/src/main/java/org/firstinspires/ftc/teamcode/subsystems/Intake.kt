@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
+import com.bylazar.configurables.annotations.Configurable
 import com.pedropathing.ivy.Command
 import com.pedropathing.ivy.CommandBuilder
 import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.hardware.SparkMini
 
+@Configurable
 class Intake(hardwareMap: HardwareMap) {
     private val motor = SparkMini(hardwareMap["intakeMotor"] as CRServo)
 
@@ -34,9 +36,9 @@ class Intake(hardwareMap: HardwareMap) {
     }
 
     companion object {
-        private const val MIN_POWER     = -1.0
-        private const val MAX_POWER     = 1.0
-        private const val INTAKE_POWER  = 0.6
-        private const val OUTTAKE_POWER = -0.8
+        @JvmStatic var MIN_POWER     = -1.0
+        @JvmStatic var MAX_POWER     = 1.0
+        @JvmStatic var INTAKE_POWER  = 0.6
+        @JvmStatic var OUTTAKE_POWER = -0.8
     }
 }
