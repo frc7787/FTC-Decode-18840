@@ -1,33 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto
 
-import com.pedropathing.ivy.Scheduler
-import com.pedropathing.ivy.Scheduler.schedule
+import com.pedropathing.ivy.Command
 import com.pedropathing.ivy.groups.Groups.sequential
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import org.firstinspires.ftc.teamcode.subsystems.Robot
 
 @TeleOp(group = "Red")
-class RedFar: LinearOpMode() {
-    private val robot by lazy {
-        Robot(hardwareMap)
-    }
+class RedFar: Auto() {
+    override val auto: Command = sequential(
 
-    private val auto by lazy {
-        sequential(
-            // TODO
-        )
-    }
-
-    override fun runOpMode() {
-        robot.init()
-
-        waitForStart()
-
-        schedule(auto)
-
-        while (opModeIsActive() && !isStopRequested) {
-            Scheduler.execute()
-        }
-    }
+    )
 }
