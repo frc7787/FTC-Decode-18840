@@ -10,4 +10,8 @@ class Robot(hardwareMap: HardwareMap) {
     val spindexer = Spindexer(hardwareMap)
     val camera    = Camera(hardwareMap)
     val follower  = Constants.createFollower(hardwareMap)
+
+    fun init() {
+
+    }
 }
