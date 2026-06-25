@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.subsystems
+package org.firstinspires.ftc.teamcode.subsystems.vision
 
 import android.util.Size
 import com.qualcomm.robotcore.hardware.HardwareMap
@@ -8,7 +8,6 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.FocusCo
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.WhiteBalanceControl
 import org.firstinspires.ftc.vision.VisionPortal
-import org.firstinspires.ftc.vision.VisionPortal.StreamFormat
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import java.util.concurrent.TimeUnit
@@ -37,8 +36,10 @@ class Camera(hardwareMap: HardwareMap) {
         visionPortal.resumeStreaming()
     }
 
-    fun detectedTags(): List<AprilTagDetection> {
-        return aprilTagProcessor.detections.toList()
+    fun detectedTags(): List<AprilTag> {
+        return aprilTagProcessor.detections.map { detection ->
+            AprilTag(detection.id, detection.robotPose)
+        }
     }
 
     fun setExposure(exposure: Long, unit: TimeUnit = MILLISECONDS) {
@@ -91,7 +92,7 @@ class Camera(hardwareMap: HardwareMap) {
 
     companion object {
         private val RESOLUTION = Size(640, 480)
-        private val STREAM_FORMAT = StreamFormat.YUY2
+        private val STREAM_FORMAT = VisionPortal.StreamFormat.YUY2
 
         private const val ENABLE_LIVE_VIEW     = false
         private const val SHOW_STATS_OVERLAY   = false

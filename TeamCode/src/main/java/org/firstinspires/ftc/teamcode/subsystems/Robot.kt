@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems
 
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.pedropathing.Constants
+import org.firstinspires.ftc.teamcode.subsystems.vision.Camera
 
 class Robot(hardwareMap: HardwareMap) {
     val flywheel  = Flywheel(hardwareMap)
