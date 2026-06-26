@@ -8,15 +8,14 @@ import org.firstinspires.ftc.teamcode.subsystems.Robot
 
 abstract class Auto: LinearOpMode() {
 
-    private val robot by lazy {
+    @Suppress("unused")
+    protected val robot by lazy {
         Robot(hardwareMap)
     }
 
-    abstract val auto: Command
+    protected abstract val auto: Command
 
     override fun runOpMode() {
-        robot.init()
-
         waitForStart()
 
         schedule(auto)
